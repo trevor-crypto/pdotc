@@ -1,0 +1,18 @@
+[package]
+name = "pdotc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+blake2 = "0.9"
+hex = "0.4"
+parity-scale-codec = { version = "2.3", features = ["derive", "full"] }
+sp-core = "3.0.0"
+serde = "1"
+serde_json = "1"
+thiserror = "1"
+
+[dev-dependencies]
+ureq = { version = "2.3", features = ["json"] }
