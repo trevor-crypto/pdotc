@@ -1,4 +1,5 @@
 use parity_scale_codec::Encode;
+use sp_core::crypto::AccountId32;
 
 use crate::client::{Api, ClientError, Result, Signer};
 use crate::rpc::RpcClient;
@@ -41,14 +42,16 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         }
     }
 
-    pub fn nonce(&self) -> Result<u32> {
+    pub fn signer_account(&self) -> Result<AccountId32> {
         match &self.signer {
-            Some(signer) => {
-                let my_pub = public_into_account(signer.public());
-                let info = self.account_info(my_pub)?;
-                Ok(info.nonce)
-            }
+            Some(signer) => Ok(public_into_account(signer.public())),
             None => Err(ClientError::NoSigner),
         }
+    }
+
+    pub fn nonce(&self) -> Result<u32> {
+        let acct = self.signer_account()?;
+        let info = self.account_info(acct)?;
+        Ok(info.nonce)
     }
 }

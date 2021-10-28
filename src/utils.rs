@@ -36,12 +36,15 @@ where
     D: Deserializer<'de>,
 {
     let s: String = serde::de::Deserialize::deserialize(d)?;
-    let num = if s.starts_with("0x") {
-        // hex string
-        Balance::from_str_radix(&s[2..], 16).expect("valid Balance")
-    } else {
-        // number
-        Balance::from_str_radix(&s, 10).expect("valid Balance")
+    let num = match s.strip_prefix("0x") {
+        Some(hex) => {
+            // hex string
+            Balance::from_str_radix(hex, 16).expect("valid Balance")
+        }
+        None => {
+            // number
+            Balance::from_str_radix(&s, 10).expect("valid Balance")
+        }
     };
     Ok(num)
 }
