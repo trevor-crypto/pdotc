@@ -29,6 +29,12 @@ pub enum MultiAddress<AccountId, AccountIndex> {
     Address20([u8; 20]),
 }
 
+impl From<AccountId32> for GenericAddress {
+    fn from(a: AccountId32) -> Self {
+        MultiAddress::Id(a)
+    }
+}
+
 impl From<Public> for GenericAddress {
     fn from(p: Public) -> Self {
         let acct = public_into_account(p);
