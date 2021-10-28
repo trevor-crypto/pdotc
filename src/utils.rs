@@ -1,6 +1,6 @@
 use serde::Deserializer;
 
-use crate::H256;
+use crate::{Balance, H256};
 
 pub trait FromHexString {
     fn from_hex(hex: String) -> Result<Self, hex::FromHexError>
@@ -31,17 +31,17 @@ impl FromHexString for H256 {
     }
 }
 
-pub fn deser_number_or_hex<'de, D>(d: D) -> Result<u128, D::Error>
+pub fn deser_number_or_hex<'de, D>(d: D) -> Result<Balance, D::Error>
 where
     D: Deserializer<'de>,
 {
     let s: String = serde::de::Deserialize::deserialize(d)?;
     let num = if s.starts_with("0x") {
         // hex string
-        u128::from_str_radix(&s[2..], 16).expect("valid u128")
+        Balance::from_str_radix(&s[2..], 16).expect("valid Balance")
     } else {
         // number
-        u128::from_str_radix(&s, 10).expect("valid u128")
+        Balance::from_str_radix(&s, 10).expect("valid Balance")
     };
     Ok(num)
 }

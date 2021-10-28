@@ -3,7 +3,7 @@ use parity_scale_codec::{Compact, Decode, Encode};
 use crate::client::{Api, Signer};
 use crate::pallets::CallIndex;
 use crate::rpc::RpcClient;
-use crate::{GenericAddress, UncheckedExtrinsic};
+use crate::{Balance, GenericAddress, UncheckedExtrinsic};
 
 const STAKING_PALLET_IDX: u8 = 6;
 const STAKING_BOND: CallIndex = [STAKING_PALLET_IDX, 0];
@@ -18,16 +18,16 @@ const STAKING_REBOND: CallIndex = [STAKING_PALLET_IDX, 13];
 pub type ComposedStakingBond = (
     CallIndex,
     GenericAddress,
-    Compact<u128>,
+    Compact<Balance>,
     RewardDestination<GenericAddress>,
 );
-pub type ComposedStakingBondExtra = (CallIndex, Compact<u128>);
-pub type ComposedStakingUnbond = (CallIndex, Compact<u128>);
+pub type ComposedStakingBondExtra = (CallIndex, Compact<Balance>);
+pub type ComposedStakingUnbond = (CallIndex, Compact<Balance>);
 pub type ComposedStakingWithdrawUnbonded = (CallIndex, u32);
 pub type ComposedStakingNominate = (CallIndex, Vec<GenericAddress>);
 pub type ComposedStakingChill = CallIndex;
 pub type ComposedStakingSetController = (CallIndex, GenericAddress);
-pub type ComposedStakingRebond = (CallIndex, Compact<u128>);
+pub type ComposedStakingRebond = (CallIndex, Compact<Balance>);
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Encode, Decode)]
 pub enum RewardDestination<Account> {
@@ -42,19 +42,22 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
     pub fn staking_bond(
         &self,
         controller: GenericAddress,
-        amount: u128,
+        amount: Balance,
         payee: RewardDestination<GenericAddress>,
     ) -> UncheckedExtrinsic<ComposedStakingBond> {
         let call = (STAKING_BOND, controller, Compact(amount), payee);
         self.create_xt(call)
     }
 
-    pub fn staking_bond_extra(&self, amount: u128) -> UncheckedExtrinsic<ComposedStakingBondExtra> {
+    pub fn staking_bond_extra(
+        &self,
+        amount: Balance,
+    ) -> UncheckedExtrinsic<ComposedStakingBondExtra> {
         let call = (STAKING_BOND_EXTRA, Compact(amount));
         self.create_xt(call)
     }
 
-    pub fn staking_unbond(&self, amount: u128) -> UncheckedExtrinsic<ComposedStakingUnbond> {
+    pub fn staking_unbond(&self, amount: Balance) -> UncheckedExtrinsic<ComposedStakingUnbond> {
         let call = (STAKING_UNBOND, Compact(amount));
         self.create_xt(call)
     }
@@ -88,7 +91,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         self.create_xt(call)
     }
 
-    pub fn staking_rebond(&self, amount: u128) -> UncheckedExtrinsic<ComposedStakingRebond> {
+    pub fn staking_rebond(&self, amount: Balance) -> UncheckedExtrinsic<ComposedStakingRebond> {
         let call = (STAKING_REBOND, Compact(amount));
         self.create_xt(call)
     }

@@ -13,6 +13,8 @@ mod utils;
 
 pub type GenericAddress = MultiAddress<AccountId32, ()>;
 
+pub type Balance = u128;
+
 #[derive(Clone, Debug, Decode, Encode, PartialEq)]
 pub enum MultiAddress<AccountId, AccountIndex> {
     /// It's an account ID (pubkey).
@@ -51,11 +53,11 @@ pub enum MultiSignature {
 pub type SignedExtra = (u32, u32, H256, H256, (), (), ());
 
 #[derive(Clone, Copy, Debug, Decode, Encode, PartialEq)]
-pub struct GenericExtra(Era, Compact<u32>, Compact<u128>);
+pub struct GenericExtra(Era, Compact<u32>, Compact<Balance>);
 
 impl GenericExtra {
     pub fn new(era: Era, nonce: u32) -> GenericExtra {
-        GenericExtra(era, Compact(nonce), Compact(0_u128))
+        GenericExtra(era, Compact(nonce), Compact(0u128))
     }
 }
 
@@ -233,7 +235,7 @@ pub struct AccountInfoGen<Index, AccountData> {
     pub data: AccountData,
 }
 
-pub type AccountData = AccountDataGen<u128>;
+pub type AccountData = AccountDataGen<Balance>;
 pub type AccountInfo = AccountInfoGen<Index, AccountData>;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -244,7 +246,7 @@ pub struct FeeDetails {
     // Do not serialize and deserialize `tip` as we actually can not pass any tip to the RPC.
     #[serde(skip)]
     #[serde(deserialize_with = "deser_number_or_hex")]
-    pub tip: u128,
+    pub tip: Balance,
 }
 
 impl FeeDetails {
@@ -253,7 +255,7 @@ impl FeeDetails {
     /// ```ignore
     /// final_fee = inclusion_fee + tip;
     /// ```
-    pub fn final_fee(&self) -> u128 {
+    pub fn final_fee(&self) -> Balance {
         self.inclusion_fee
             .as_ref()
             .map(|i| i.inclusion_fee())
@@ -269,11 +271,11 @@ pub struct InclusionFee {
     /// as a base _weight_ in the runtime and converted to a fee using
     /// `WeightToFee`.
     #[serde(deserialize_with = "deser_number_or_hex")]
-    pub base_fee: u128,
+    pub base_fee: Balance,
     /// The length fee, the amount paid for the encoded length (in bytes) of the
     /// transaction.
     #[serde(deserialize_with = "deser_number_or_hex")]
-    pub len_fee: u128,
+    pub len_fee: Balance,
     /// 
     /// - `targeted_fee_adjustment`: This is a multiplier that can tune the
     ///   final fee based on the congestion of the network.
@@ -283,11 +285,11 @@ pub struct InclusionFee {
     ///
     /// adjusted_weight_fee = targeted_fee_adjustment * weight_fee
     #[serde(deserialize_with = "deser_number_or_hex")]
-    pub adjusted_weight_fee: u128,
+    pub adjusted_weight_fee: Balance,
 }
 
 impl InclusionFee {
-    pub fn inclusion_fee(&self) -> u128 {
+    pub fn inclusion_fee(&self) -> Balance {
         self.base_fee
             .saturating_add(self.len_fee)
             .saturating_add(self.adjusted_weight_fee)
