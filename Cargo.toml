@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 hex = "0.4"
 parity-scale-codec = { version = "2.3", features = ["derive", "full"] }
-sp-core = "3.0.0"
+sp-core = { version = "3.0.0", default-features = false,  features = ["full_crypto", "serde"] }
 serde = "1"
 serde_json = "1"
 thiserror = "1"
@@ -17,3 +17,9 @@ thiserror = "1"
 [dev-dependencies]
 secp256k1 = { version = "0.20.3", features = ["recovery"] }
 ureq = { version = "2.3", features = ["json"] }
+
+[features]
+default = ["full"]
+full = [
+    "sp-core/std"
+]

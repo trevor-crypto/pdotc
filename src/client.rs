@@ -1,14 +1,13 @@
 use sp_core::crypto::AccountId32;
 use sp_core::ecdsa::Public;
 pub use sp_core::ecdsa::Signature;
-pub use sp_core::H256;
 
 use crate::pallets::storage::storage_key_account_balance;
 use crate::rpc::{
     chain_get_genesis_hash, state_get_runtime_version, state_get_storage, JsonRpcError, RpcClient,
 };
 use crate::utils::FromHexString;
-use crate::{AccountData, AccountInfo, MultiSignature, RuntimeVersion};
+use crate::{AccountData, AccountInfo, MultiSignature, RuntimeVersion, H256};
 
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 

@@ -1,13 +1,16 @@
 use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
+pub use sp_core::blake2_256;
 pub use sp_core::crypto::{AccountId32, Ss58Codec};
 use sp_core::ecdsa::{Public, Signature};
-pub use sp_core::{blake2_256, H256};
 
 pub mod client;
 pub mod pallets;
 pub mod rpc;
 pub mod utils;
+
+#[derive(Debug, Clone, Copy, Decode, Encode, Serialize, Deserialize)]
+pub struct H256(pub [u8; 32]);
 
 pub type GenericAddress = MultiAddress<AccountId32, ()>;
 

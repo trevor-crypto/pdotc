@@ -1,4 +1,4 @@
-use sp_core::H256;
+use crate::H256;
 
 pub trait FromHexString {
     fn from_hex(hex: String) -> Result<Self, hex::FromHexError>
@@ -23,7 +23,7 @@ impl FromHexString for H256 {
         let vec = Vec::from_hex(hex)?;
 
         match vec.len() {
-            32 => Ok(H256::from_slice(&vec)),
+            32 => Ok(H256(vec.try_into().unwrap())),
             _ => Err(hex::FromHexError::InvalidStringLength),
         }
     }

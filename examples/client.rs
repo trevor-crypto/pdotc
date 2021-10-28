@@ -81,15 +81,12 @@ fn main() {
     dbg!(balance);
 
     // sign a tx
-    let xt = api
-        .balance_transfer(
-            MultiAddress::Id(
-                AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe")
-                    .unwrap(),
-            ),
-            1000,
-        )
-        .unwrap();
+    let xt = api.balance_transfer(
+        MultiAddress::Id(
+            AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe").unwrap(),
+        ),
+        1000,
+    );
     let xt_hex = xt.as_hex();
     dbg!(&xt_hex);
     assert_eq!(

@@ -4,11 +4,11 @@ use parity_scale_codec::Decode;
 pub use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, to_value, Value};
-use sp_core::storage::StorageKey;
-use sp_core::H256;
 
 use crate::client::{ClientError, Result};
+use crate::pallets::storage::StorageKey;
 use crate::utils::FromHexString;
+use crate::H256;
 
 pub trait RpcClient {
     fn post(&self, json_req: Value) -> Result<JsonRpcResponse>;

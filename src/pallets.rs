@@ -5,28 +5,17 @@ use crate::rpc::RpcClient;
 use crate::{public_into_account, Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
 
 pub mod balances;
+pub mod staking;
 pub mod storage;
 
 pub(crate) type CallIndex = [u8; 2];
 
-pub(crate) const BALANCES_TRANSFER: CallIndex = [4, 0];
-
-pub trait Composed: Encode {
-    type ComposedType: Encode + Clone;
-    fn compose(&self) -> Self::ComposedType;
-}
-
 impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
     /// Creates and signs an extrinsic that can be submitted to a node
-    pub fn create_xt<C: Composed>(
-        &self,
-        call: C,
-        nonce: u32,
-    ) -> UncheckedExtrinsic<C::ComposedType> {
-        let composed = call.compose();
+    pub fn create_xt<C: Encode + Clone>(&self, call: C) -> UncheckedExtrinsic<C> {
         let gen_hash = self.genesis_hash;
         let runtime_version = self.runtime_version;
-        let extra = GenericExtra::new(Era::Immortal, nonce);
+        let extra = GenericExtra::new(Era::Immortal, self.nonce().expect("account nonce"));
         let s_extra = (
             runtime_version.spec_version,
             runtime_version.transaction_version,
@@ -36,7 +25,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
             (),
             (),
         );
-        let raw_payload = SignedPayload::new(composed.clone(), extra, s_extra);
+        let raw_payload = SignedPayload::new(call.clone(), extra, s_extra);
 
         let signature = if let Some(signer) = &self.signer {
             let from = signer.public().into();
@@ -48,7 +37,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
 
         UncheckedExtrinsic {
             signature,
-            function: composed,
+            function: call,
         }
     }
 
