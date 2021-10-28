@@ -13,7 +13,7 @@ use crate::utils::FromHexString;
 pub trait RpcClient {
     fn post(&self, json_req: Value) -> Result<JsonRpcResponse>;
 
-    fn send_extrinstic(&self, xt: &str) -> Result<String> {
+    fn send_extrinsic(&self, xt: &str) -> Result<String> {
         let json = author_submit_extrinsic(xt);
         Ok(self.post(json)?.into_string()?)
     }
