@@ -89,6 +89,12 @@ fn main() {
     );
     let xt_hex = xt.as_hex();
     dbg!(&xt_hex);
+
+    // get the fee for xt
+    let fees = api.fee_details(&xt_hex, None).unwrap();
+    dbg!(fees);
+
+    // decode xt
     assert_eq!(
         xt,
         UncheckedExtrinsic::decode(
@@ -100,6 +106,6 @@ fn main() {
     );
 
     // send out the transfer xt
-    let tx_hash = client.send_extrinstic(&xt_hex).unwrap();
-    dbg!(tx_hash);
+    // let tx_hash = client.send_extrinstic(&xt_hex).unwrap();
+    // dbg!(tx_hash);
 }

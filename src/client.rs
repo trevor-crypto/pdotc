@@ -4,10 +4,11 @@ pub use sp_core::ecdsa::Signature;
 
 use crate::pallets::storage::storage_key_account_balance;
 use crate::rpc::{
-    chain_get_genesis_hash, state_get_runtime_version, state_get_storage, JsonRpcError, RpcClient,
+    chain_get_genesis_hash, payment_query_fee_details, state_get_runtime_version,
+    state_get_storage, JsonRpcError, RpcClient,
 };
 use crate::utils::FromHexString;
-use crate::{AccountData, AccountInfo, MultiSignature, RuntimeVersion, H256};
+use crate::{AccountData, AccountInfo, FeeDetails, MultiSignature, RuntimeVersion, H256};
 
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 
@@ -95,5 +96,13 @@ impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
         let info: AccountInfo = self.client.post(json)?.decode_into()?;
 
         Ok(info)
+    }
+
+    /// Calculate a fee for given extrinsic
+    pub fn fee_details(&self, xt_hex_prefixed: &str, at_block: Option<H256>) -> Result<FeeDetails> {
+        let jsonreq = payment_query_fee_details(xt_hex_prefixed, at_block);
+        let fees = self.client.post(jsonreq)?.into_result()?;
+
+        Ok(fees)
     }
 }

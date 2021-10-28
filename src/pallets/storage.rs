@@ -1,8 +1,5 @@
-use serde::{Deserialize, Serialize};
+use sp_core::storage::StorageKey;
 use sp_core::{blake2_128, twox_128};
-
-#[derive(Serialize, Deserialize, Hash, Clone)]
-pub struct StorageKey(pub Vec<u8>);
 
 pub(crate) fn storage_key_account_balance(account: &[u8]) -> StorageKey {
     storage_key("System", "Account", account)

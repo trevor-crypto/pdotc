@@ -4,11 +4,11 @@ use parity_scale_codec::Decode;
 pub use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, to_value, Value};
+use sp_core::storage::StorageKey;
+use sp_core::H256;
 
 use crate::client::{ClientError, Result};
-use crate::pallets::storage::StorageKey;
 use crate::utils::FromHexString;
-use crate::H256;
 
 pub trait RpcClient {
     fn post(&self, json_req: Value) -> Result<JsonRpcResponse>;
@@ -109,12 +109,23 @@ pub fn state_get_storage(key: StorageKey, at_block: Option<H256>) -> Value {
     )
 }
 
-pub fn author_submit_extrinsic(xthex_prefixed: &str) -> Value {
-    author_submit_extrinsic_with_id(xthex_prefixed, 3)
+pub fn payment_query_fee_details(xt_hex_prefixed: &str, at_block: Option<H256>) -> Value {
+    json_req(
+        "payment_queryFeeDetails",
+        vec![
+            to_value(xt_hex_prefixed).unwrap(),
+            to_value(at_block).unwrap(),
+        ],
+        1,
+    )
 }
 
-pub fn author_submit_extrinsic_with_id(xthex_prefixed: &str, id: u32) -> Value {
-    json_req("author_submitExtrinsic", vec![xthex_prefixed], id)
+pub fn author_submit_extrinsic(xt_hex_prefixed: &str) -> Value {
+    author_submit_extrinsic_with_id(xt_hex_prefixed, 3)
+}
+
+pub fn author_submit_extrinsic_with_id(xt_hex_prefixed: &str, id: u32) -> Value {
+    json_req("author_submitExtrinsic", vec![xt_hex_prefixed], id)
 }
 
 fn json_req<S: Serialize>(method: &str, params: S, id: u32) -> Value {

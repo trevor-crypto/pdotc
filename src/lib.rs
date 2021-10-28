@@ -3,14 +3,14 @@ use serde::{Deserialize, Serialize};
 pub use sp_core::blake2_256;
 pub use sp_core::crypto::{AccountId32, Ss58Codec};
 use sp_core::ecdsa::{Public, Signature};
+use sp_core::H256;
+
+use crate::utils::deser_number_or_hex;
 
 pub mod client;
 pub mod pallets;
 pub mod rpc;
-pub mod utils;
-
-#[derive(Debug, Clone, Copy, Decode, Encode, Serialize, Deserialize)]
-pub struct H256(pub [u8; 32]);
+mod utils;
 
 pub type GenericAddress = MultiAddress<AccountId32, ()>;
 
@@ -236,3 +236,61 @@ pub struct AccountInfoGen<Index, AccountData> {
 
 pub type AccountData = AccountDataGen<u128>;
 pub type AccountInfo = AccountInfoGen<Index, AccountData>;
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FeeDetails {
+    /// The minimum fee for a transaction to be included in a block.
+    pub inclusion_fee: Option<InclusionFee>,
+    // Do not serialize and deserialize `tip` as we actually can not pass any tip to the RPC.
+    #[serde(skip)]
+    #[serde(deserialize_with = "deser_number_or_hex")]
+    pub tip: u128,
+}
+
+impl FeeDetails {
+    /// Returns the final fee.
+    ///
+    /// ```ignore
+    /// final_fee = inclusion_fee + tip;
+    /// ```
+    pub fn final_fee(&self) -> u128 {
+        self.inclusion_fee
+            .as_ref()
+            .map(|i| i.inclusion_fee())
+            .unwrap_or_default()
+            .saturating_add(self.tip)
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InclusionFee {
+    /// This is the minimum amount a user pays for a transaction. It is declared
+    /// as a base _weight_ in the runtime and converted to a fee using
+    /// `WeightToFee`.
+    #[serde(deserialize_with = "deser_number_or_hex")]
+    pub base_fee: u128,
+    /// The length fee, the amount paid for the encoded length (in bytes) of the
+    /// transaction.
+    #[serde(deserialize_with = "deser_number_or_hex")]
+    pub len_fee: u128,
+    /// 
+    /// - `targeted_fee_adjustment`: This is a multiplier that can tune the
+    ///   final fee based on the congestion of the network.
+    /// - `weight_fee`: This amount is computed based on the weight of the
+    ///   transaction. Weight
+    /// accounts for the execution time of a transaction.
+    ///
+    /// adjusted_weight_fee = targeted_fee_adjustment * weight_fee
+    #[serde(deserialize_with = "deser_number_or_hex")]
+    pub adjusted_weight_fee: u128,
+}
+
+impl InclusionFee {
+    pub fn inclusion_fee(&self) -> u128 {
+        self.base_fee
+            .saturating_add(self.len_fee)
+            .saturating_add(self.adjusted_weight_fee)
+    }
+}
