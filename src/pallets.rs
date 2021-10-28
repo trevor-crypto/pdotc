@@ -1,27 +1,32 @@
 use parity_scale_codec::Encode;
-use sp_core::storage::StorageKey;
-use sp_core::{blake2_128, twox_128};
 
-use crate::client::{Api, Signer};
+use crate::client::{Api, ClientError, Result, Signer};
 use crate::rpc::RpcClient;
-use crate::{Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
+use crate::{public_into_account, Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
 
 pub mod balances;
+pub mod storage;
 
-pub(crate) const BALANCES_TRANSFER: [u8; 2] = [4, 0];
+pub(crate) type CallIndex = [u8; 2];
+
+pub(crate) const BALANCES_TRANSFER: CallIndex = [4, 0];
 
 pub trait Composed: Encode {
-    type ComposedType;
+    type ComposedType: Encode + Clone;
     fn compose(&self) -> Self::ComposedType;
 }
 
-impl<S: Signer, Client: RpcClient> Api<S, Client> {
-    /// Creates and signs and extrinsic that can be submitted to a node
-    pub fn create_xt<C: Composed>(&self, call: C) -> UncheckedExtrinsic<C::ComposedType> {
+impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
+    /// Creates and signs an extrinsic that can be submitted to a node
+    pub fn create_xt<C: Composed>(
+        &self,
+        call: C,
+        nonce: u32,
+    ) -> UncheckedExtrinsic<C::ComposedType> {
         let composed = call.compose();
         let gen_hash = self.genesis_hash;
         let runtime_version = self.runtime_version;
-        let extra = GenericExtra::new(Era::Immortal, 0);
+        let extra = GenericExtra::new(Era::Immortal, nonce);
         let s_extra = (
             runtime_version.spec_version,
             runtime_version.transaction_version,
@@ -31,10 +36,10 @@ impl<S: Signer, Client: RpcClient> Api<S, Client> {
             (),
             (),
         );
-        let raw_payload = SignedPayload::new(call, extra, s_extra);
+        let raw_payload = SignedPayload::new(composed.clone(), extra, s_extra);
 
         let signature = if let Some(signer) = &self.signer {
-            let from = signer.public();
+            let from = signer.public().into();
             let sig = raw_payload.encoded(|payload| signer.sign(payload));
             Some((from, sig, extra))
         } else {
@@ -46,16 +51,15 @@ impl<S: Signer, Client: RpcClient> Api<S, Client> {
             function: composed,
         }
     }
-}
 
-pub(crate) fn storage_key_account_balance(account: &[u8]) -> StorageKey {
-    storage_key("System", "Account", account)
-}
-
-fn storage_key(pallet: &str, storage: &str, account: &[u8]) -> StorageKey {
-    let pallet = twox_128(pallet.as_bytes());
-    let storage = twox_128(storage.as_bytes());
-    let key_hash: Vec<u8> = blake2_128(account).iter().chain(account).cloned().collect();
-    let key: Vec<u8> = pallet.into_iter().chain(storage).chain(key_hash).collect();
-    StorageKey(key)
+    pub fn nonce(&self) -> Result<u32> {
+        match &self.signer {
+            Some(signer) => {
+                let my_pub = public_into_account(signer.public());
+                let info = self.account_info(my_pub)?;
+                Ok(info.nonce)
+            }
+            None => Err(ClientError::NoSigner),
+        }
+    }
 }

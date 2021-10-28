@@ -1,13 +1,14 @@
-use sp_core::crypto::{AccountId32, Ss58Codec};
+use sp_core::crypto::AccountId32;
+use sp_core::ecdsa::Public;
 pub use sp_core::ecdsa::Signature;
 pub use sp_core::H256;
 
-use crate::pallets::storage_key_account_balance;
+use crate::pallets::storage::storage_key_account_balance;
 use crate::rpc::{
     chain_get_genesis_hash, state_get_runtime_version, state_get_storage, JsonRpcError, RpcClient,
 };
 use crate::utils::FromHexString;
-use crate::{AccountData, AccountInfo, MultiAddress, MultiSignature, RuntimeVersion};
+use crate::{AccountData, AccountInfo, MultiSignature, RuntimeVersion};
 
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 
@@ -23,30 +24,41 @@ pub enum ClientError {
     FromHex(#[from] hex::FromHexError),
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Bad address: {0}")]
-    BadAddressString(String),
     #[error("parity SCALE codec decode error: {0}")]
     DecodeError(#[from] parity_scale_codec::Error),
+    #[error("Signer not set")]
+    NoSigner,
 }
 
 /// A trait to implement on a keystore that can produce an ECDSA signature
 pub trait Signer {
-    fn public(&self) -> MultiAddress;
-    fn sign(&self, message: &[u8]) -> MultiSignature;
+    /// Returns a 33 byte ECDSA public key
+    fn _public(&self) -> [u8; 33];
+
+    /// Returns a 65 byte compressed ECDSA signature
+    fn _sign(&self, message: &[u8]) -> [u8; 65];
+
+    fn public(&self) -> Public {
+        Public(self._public())
+    }
+
+    fn sign(&self, message: &[u8]) -> MultiSignature {
+        MultiSignature::Ecdsa(Signature(self._sign(message)))
+    }
 }
 
 /// A struct to interface with a node's JsonRPC server
-pub struct Api<S, Client: RpcClient> {
+pub struct Api<'c, S, Client: RpcClient> {
     pub genesis_hash: H256,
     pub runtime_version: RuntimeVersion,
     pub signer: Option<S>,
-    client: Client,
+    client: &'c Client,
 }
 
-impl<S, Client: RpcClient> Api<S, Client> {
-    pub fn new(client: Client) -> Result<Self> {
-        let genesis_hash = Self::genesis_hash(&client)?;
-        let runtime_version = Self::runtime_version(&client)?;
+impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
+    pub fn new(client: &'c Client) -> Result<Self> {
+        let genesis_hash = Self::genesis_hash(client)?;
+        let runtime_version = Self::runtime_version(client)?;
         Ok(Api {
             genesis_hash,
             runtime_version,
@@ -55,7 +67,7 @@ impl<S, Client: RpcClient> Api<S, Client> {
         })
     }
 
-    pub fn new_with_signer(client: Client, signer: S) -> Result<Self> {
+    pub fn new_with_signer(client: &'c Client, signer: S) -> Result<Self> {
         let mut client = Self::new(client)?;
         client.signer = Some(signer);
         Ok(client)
@@ -72,20 +84,16 @@ impl<S, Client: RpcClient> Api<S, Client> {
     }
 
     /// Get balances of given address
-    pub fn account_data(&self, address: &str) -> Result<AccountData> {
+    pub fn account_data<A: Into<AccountId32>>(&self, address: A) -> Result<AccountData> {
         self.account_info(address).map(|i| i.data)
     }
 
     /// Get account info for given address
-    pub fn account_info(&self, address: &str) -> Result<AccountInfo> {
-        let account = AccountId32::from_string(address)
-            .map_err(|_| ClientError::BadAddressString(address.to_string()))?;
-        let storage_key = storage_key_account_balance(account.as_ref());
+    pub fn account_info<A: Into<AccountId32>>(&self, address: A) -> Result<AccountInfo> {
+        let storage_key = storage_key_account_balance(address.into().as_ref());
 
         let json = state_get_storage(storage_key, None);
         let info: AccountInfo = self.client.post(json)?.decode_into()?;
-
-        dbg!(&info);
 
         Ok(info)
     }

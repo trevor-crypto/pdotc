@@ -1,5 +1,7 @@
+use std::fmt::Debug;
+
 use parity_scale_codec::Decode;
-use serde::de::DeserializeOwned;
+pub use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, to_value, Value};
 use sp_core::storage::StorageKey;
@@ -10,8 +12,9 @@ use crate::utils::FromHexString;
 
 pub trait RpcClient {
     fn post(&self, json_req: Value) -> Result<JsonRpcResponse>;
+
     fn send_extrinstic(&self, xt: &str) -> Result<String> {
-        let json = author_submit_extrinsic(&xt);
+        let json = author_submit_extrinsic(xt);
         Ok(self.post(json)?.into_string()?)
     }
 }
@@ -21,6 +24,7 @@ pub trait RpcClient {
 pub enum JsonRpcResponse {
     Success(JsonRpcSuccess),
     Error(JsonRpcError),
+    String(String),
 }
 
 impl JsonRpcResponse {
@@ -28,6 +32,7 @@ impl JsonRpcResponse {
         match self {
             JsonRpcResponse::Success(s) => Ok(serde_json::from_value::<T>(s.result)?),
             JsonRpcResponse::Error(e) => Err(ClientError::JsonRpcError(e)),
+            JsonRpcResponse::String(s) => Ok(serde_json::from_str(&s)?),
         }
     }
 
@@ -35,6 +40,7 @@ impl JsonRpcResponse {
         match self {
             JsonRpcResponse::Success(s) => Ok(s.result.to_string()),
             JsonRpcResponse::Error(e) => Err(e),
+            JsonRpcResponse::String(s) => Ok(s),
         }
     }
 
@@ -46,20 +52,28 @@ impl JsonRpcResponse {
                 Ok(t)
             }
             JsonRpcResponse::Error(e) => Err(ClientError::JsonRpcError(e)),
+            JsonRpcResponse::String(s) => Ok(Decode::decode(&mut s.as_bytes())?),
         }
     }
 }
 
 #[derive(Debug, Deserialize)]
 pub struct JsonRpcSuccess {
-    pub jsonrpc: String,
     pub result: Value,
+    pub jsonrpc: String,
     pub id: String,
 }
 
 #[derive(Debug, Deserialize, thiserror::Error)]
-#[error("Json RPC error: code {code}, message {message}, data: {data:?}")]
+#[error("Json RPC error: code {{error.code}}, message {{error.message}}, data: {{error.data:?}}")]
 pub struct JsonRpcError {
+    pub jsonrpc: String,
+    pub id: String,
+    pub error: RpcError,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RpcError {
     pub code: i64,
     pub message: String,
     pub data: Option<Value>,

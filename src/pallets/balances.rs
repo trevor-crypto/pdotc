@@ -1,21 +1,21 @@
 use parity_scale_codec::{Compact, Decode, Encode};
 
 use crate::client::{Api, Result, Signer};
-use crate::pallets::{Composed, BALANCES_TRANSFER};
+use crate::pallets::{CallIndex, Composed, BALANCES_TRANSFER};
 use crate::rpc::RpcClient;
-use crate::{MultiAddress, UncheckedExtrinsic};
+use crate::{GenericAddress, UncheckedExtrinsic};
 
 /// Pallet: Balances
 /// Function: transfer
 #[derive(Debug, Clone, Encode, Decode)]
 pub struct Transfer {
     /// Destination address pubkey
-    pub dest: MultiAddress,
+    pub dest: GenericAddress,
     /// Amount of funds to transfer
     pub value: u128,
 }
 
-type ComposedTransfer = ([u8; 2], MultiAddress, Compact<u128>);
+type ComposedTransfer = (CallIndex, GenericAddress, Compact<u128>);
 
 impl Composed for Transfer {
     type ComposedType = ComposedTransfer;
@@ -25,18 +25,18 @@ impl Composed for Transfer {
     }
 }
 
-impl<S: Signer, Client: RpcClient> Api<S, Client> {
-    pub fn transfer_xt(
+impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
+    pub fn balance_transfer(
         &self,
-        to: MultiAddress,
+        to: GenericAddress,
         amount: u128,
     ) -> Result<UncheckedExtrinsic<ComposedTransfer>> {
         let call = Transfer {
             dest: to,
             value: amount,
         };
-
-        let xt = self.create_xt(call);
+        let nonce = self.nonce()?;
+        let xt = self.create_xt(call, nonce);
         Ok(xt)
     }
 }

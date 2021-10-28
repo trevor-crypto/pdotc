@@ -1,30 +1,54 @@
-use blake2::Digest;
 use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
-use sp_core::crypto::AccountId32;
-use sp_core::ecdsa::Signature;
-use sp_core::H256;
+pub use sp_core::crypto::{AccountId32, Ss58Codec};
+use sp_core::ecdsa::{Public, Signature};
+pub use sp_core::{blake2_256, H256};
 
 pub mod client;
 pub mod pallets;
 pub mod rpc;
 pub mod utils;
 
+pub type GenericAddress = MultiAddress<AccountId32, ()>;
+
+#[derive(Clone, Debug, Decode, Encode, PartialEq)]
+pub enum MultiAddress<AccountId, AccountIndex> {
+    /// It's an account ID (pubkey).
+    Id(AccountId),
+    /// It's an account index.
+    Index(#[codec(compact)] AccountIndex),
+    /// It's some arbitrary raw bytes.
+    Raw(Vec<u8>),
+    /// It's a 32 byte representation.
+    Address32([u8; 32]),
+    /// Its a 20 byte representation.
+    Address20([u8; 20]),
+}
+
+impl From<Public> for GenericAddress {
+    fn from(p: Public) -> Self {
+        let acct = public_into_account(p);
+        MultiAddress::Id(acct)
+    }
+}
+
+pub fn public_into_account(p: Public) -> AccountId32 {
+    let hash = blake2_256(&p.0);
+    hash.into()
+}
+
+#[derive(Clone, Debug, Decode, Encode, PartialEq)]
+pub enum MultiSignature {
+    /// An ECDSA/SECP256k1 signature.
+    #[codec(index = 2)]
+    Ecdsa(Signature),
+}
+
 /// runtime spec verion, transaction version, genesis hash, genesis hash or
 /// current hash, ...others
 pub type SignedExtra = (u32, u32, H256, H256, (), (), ());
 
-#[derive(Clone, Debug, Decode, Encode)]
-pub enum MultiAddress {
-    Id(AccountId32),
-}
-
-#[derive(Clone, Debug, Decode, Encode)]
-pub enum MultiSignature {
-    Ecdsa(Signature),
-}
-
-#[derive(Clone, Copy, Debug, Decode, Encode)]
+#[derive(Clone, Copy, Debug, Decode, Encode, PartialEq)]
 pub struct GenericExtra(Era, Compact<u32>, Compact<u128>);
 
 impl GenericExtra {
@@ -33,15 +57,15 @@ impl GenericExtra {
     }
 }
 
-#[derive(Clone, Copy, Debug, Decode, Encode)]
+#[derive(Clone, Copy, Debug, Decode, Encode, PartialEq)]
 pub enum Era {
     Immortal,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct UncheckedExtrinsic<Call> {
     /// Address pubkey, Signature, Extras
-    pub signature: Option<(MultiAddress, MultiSignature, GenericExtra)>,
+    pub signature: Option<(GenericAddress, MultiSignature, GenericExtra)>,
     pub function: Call,
 }
 
@@ -104,7 +128,7 @@ where
 /// Same function as in primitives::generic. Needed to be copied as it is
 /// private there.
 fn encode_with_vec_prefix<T: Encode, F: Fn(&mut Vec<u8>)>(encoder: F) -> Vec<u8> {
-    let size = std::mem::size_of::<T>();
+    let size = core::mem::size_of::<T>();
     let reserve = match size {
         0..=0b0011_1111 => 1,
         0b0100_0000..=0b0011_1111_1111_1111 => 2,
@@ -136,11 +160,10 @@ impl<Call: Encode> SignedPayload<Call> {
     /// Get an encoded version of this payload.
     ///
     /// Payloads longer than 256 bytes are going to be `blake2_256`-hashed.
-    /// Returns a 65 byte ECDSA signature
     pub fn encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
         self.0.using_encoded(|payload| {
             if payload.len() > 256 {
-                f(&blake2::Blake2s::digest(payload))
+                f(&blake2_256(payload))
             } else {
                 f(payload)
             }
