@@ -1,4 +1,5 @@
 use serde::Deserializer;
+pub use sp_core::crypto::Ss58AddressFormat;
 
 use crate::H256;
 
