@@ -1,6 +1,6 @@
 use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
-pub use sp_core::crypto::{AccountId32, Ss58Codec};
+pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58Codec};
 pub use sp_core::ecdsa::{Public, Signature};
 pub use sp_core::{blake2_256, H256};
 
