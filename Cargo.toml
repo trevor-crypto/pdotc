@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Trevor Arjeski <trevor.arjeski@crypto.com>"]
 description = "A minimal polkadot/westend client"
 keywords = ["polkadot", "substrate"]
-license-file = "LICENSE"
+license-file = "MIT"
+repository = "https://github.com/trevor-crypto/pdotc"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
