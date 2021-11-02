@@ -1,10 +1,10 @@
 [package]
 name = "pdotc"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Trevor Arjeski <trevor.arjeski@crypto.com>"]
 description = "A minimal polkadot/westend client"
 keywords = ["polkadot", "substrate"]
-license-file = "MIT"
+license = "MIT"
 repository = "https://github.com/trevor-crypto/pdotc"
 edition = "2021"
 
