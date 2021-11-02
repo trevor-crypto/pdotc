@@ -12,6 +12,8 @@ use crate::{AccountData, AccountInfo, FeeDetails, MultiSignature, RuntimeVersion
 
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 
+type StdError = Box<dyn std::error::Error + Send + Sync>;
+
 #[derive(Debug, thiserror::Error)]
 pub enum ClientError {
     #[error("Inner http client error: {0}")]
@@ -28,22 +30,24 @@ pub enum ClientError {
     DecodeError(#[from] parity_scale_codec::Error),
     #[error("Signer not set")]
     NoSigner,
+    #[error(transparent)]
+    Other(#[from] StdError),
 }
 
 /// A trait to implement on a keystore that can produce an ECDSA signature
 pub trait Signer {
     /// Returns a 33 byte ECDSA public key
-    fn _public(&self) -> [u8; 33];
+    fn _public(&self) -> std::result::Result<[u8; 33], StdError>;
 
     /// Returns a 65 byte compressed ECDSA signature
-    fn _sign(&self, message: &[u8]) -> [u8; 65];
+    fn _sign(&self, message: &[u8]) -> std::result::Result<[u8; 65], StdError>;
 
-    fn public(&self) -> Public {
-        Public(self._public())
+    fn public(&self) -> Result<Public> {
+        Ok(Public(self._public()?))
     }
 
-    fn sign(&self, message: &[u8]) -> MultiSignature {
-        MultiSignature::Ecdsa(Signature(self._sign(message)))
+    fn sign(&self, message: &[u8]) -> Result<MultiSignature> {
+        Ok(MultiSignature::Ecdsa(Signature(self._sign(message)?)))
     }
 }
 

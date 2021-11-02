@@ -1,6 +1,6 @@
 use parity_scale_codec::Compact;
 
-use crate::client::{Api, Signer};
+use crate::client::{Api, Result, Signer};
 use crate::pallets::CallIndex;
 use crate::rpc::RpcClient;
 use crate::{Balance, GenericAddress, UncheckedExtrinsic};
@@ -15,7 +15,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         &self,
         to: GenericAddress,
         amount: Balance,
-    ) -> UncheckedExtrinsic<ComposedTransfer> {
+    ) -> Result<UncheckedExtrinsic<ComposedTransfer>> {
         let call = (BALANCES_TRANSFER, to, Compact(amount));
         self.create_xt(call)
     }

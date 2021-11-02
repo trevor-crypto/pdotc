@@ -13,7 +13,7 @@ pub(crate) type CallIndex = [u8; 2];
 
 impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
     /// Creates and signs an extrinsic that can be submitted to a node
-    pub fn create_xt<C: Encode + Clone>(&self, call: C) -> UncheckedExtrinsic<C> {
+    pub fn create_xt<C: Encode + Clone>(&self, call: C) -> Result<UncheckedExtrinsic<C>> {
         let gen_hash = self.genesis_hash;
         let runtime_version = self.runtime_version;
         let extra = GenericExtra::new(Era::Immortal, self.nonce().expect("account nonce"));
@@ -29,22 +29,22 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         let raw_payload = SignedPayload::new(call.clone(), extra, s_extra);
 
         let signature = if let Some(signer) = &self.signer {
-            let from = signer.public().into();
-            let sig = raw_payload.encoded(|payload| signer.sign(payload));
+            let from = signer.public()?.into();
+            let sig = raw_payload.encoded(|payload| signer.sign(payload))?;
             Some((from, sig, extra))
         } else {
             None
         };
 
-        UncheckedExtrinsic {
+        Ok(UncheckedExtrinsic {
             signature,
             function: call,
-        }
+        })
     }
 
     pub fn signer_account(&self) -> Result<AccountId32> {
         match &self.signer {
-            Some(signer) => Ok(public_into_account(signer.public())),
+            Some(signer) => Ok(public_into_account(signer.public()?)),
             None => Err(ClientError::NoSigner),
         }
     }

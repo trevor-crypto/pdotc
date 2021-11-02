@@ -25,17 +25,22 @@ impl Default for KeyStore {
 }
 
 impl Signer for KeyStore {
-    fn _public(&self) -> [u8; 33] {
+    fn _public(
+        &self,
+    ) -> std::result::Result<[u8; 33], Box<(dyn std::error::Error + Send + Sync + 'static)>> {
         let secp = Secp256k1::new();
         let pubkey = PublicKey::from_secret_key(&secp, &self.key);
-        pubkey.serialize()
+        Ok(pubkey.serialize())
     }
 
-    fn _sign(&self, message: &[u8]) -> [u8; 65] {
+    fn _sign(
+        &self,
+        message: &[u8],
+    ) -> std::result::Result<[u8; 65], Box<(dyn std::error::Error + Send + Sync + 'static)>> {
         let secp = Secp256k1::signing_only();
         let digest = blake2_256(message);
 
-        let message = Message::from_slice(&digest).expect("32 byte digest");
+        let message = Message::from_slice(&digest)?;
 
         let (rec_id, compact) = secp
             .sign_recoverable(&message, &self.key)
@@ -43,7 +48,7 @@ impl Signer for KeyStore {
         let mut sig = [0; 65];
         sig[0..64].copy_from_slice(&compact);
         sig[64] = rec_id.to_i32() as u8;
-        sig
+        Ok(sig)
     }
 }
 
@@ -81,12 +86,15 @@ fn main() {
     dbg!(balance);
 
     // sign a tx
-    let xt = api.balance_transfer(
-        MultiAddress::Id(
-            AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe").unwrap(),
-        ),
-        1000,
-    );
+    let xt = api
+        .balance_transfer(
+            MultiAddress::Id(
+                AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe")
+                    .unwrap(),
+            ),
+            1000,
+        )
+        .expect("Created xt");
     let xt_hex = xt.as_hex();
     dbg!(&xt_hex);
 
