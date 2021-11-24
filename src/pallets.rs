@@ -51,7 +51,9 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
 
     pub fn nonce(&self) -> Result<u32> {
         let acct = self.signer_account()?;
-        let info = self.account_info(acct)?;
+        let info = self
+            .account_info(acct)?
+            .ok_or(ClientError::SignerAccountDoesNotExist)?;
         Ok(info.nonce)
     }
 }

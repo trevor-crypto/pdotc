@@ -44,15 +44,19 @@ impl JsonRpcResponse {
         }
     }
 
-    pub fn decode_into<T: Decode>(self) -> Result<T, ClientError> {
+    pub fn decode_into<T: Decode>(self) -> Result<Option<T>, ClientError> {
         match self {
             JsonRpcResponse::Success(s) => {
-                let v = Vec::from_hex(s.result.to_string())?;
-                let t = Decode::decode(&mut v.as_slice())?;
-                Ok(t)
+                if !s.result.is_null() {
+                    let v = Vec::from_hex(s.result.to_string())?;
+                    let t = Decode::decode(&mut v.as_slice())?;
+                    Ok(Some(t))
+                } else {
+                    Ok(None)
+                }
             }
             JsonRpcResponse::Error(e) => Err(ClientError::JsonRpcError(e)),
-            JsonRpcResponse::String(s) => Ok(Decode::decode(&mut s.as_bytes())?),
+            JsonRpcResponse::String(s) => Ok(Some(Decode::decode(&mut s.as_bytes())?)),
         }
     }
 }

@@ -30,6 +30,8 @@ pub enum ClientError {
     DecodeError(#[from] parity_scale_codec::Error),
     #[error("Signer not set")]
     NoSigner,
+    #[error("Signer account does not exist on chain")]
+    SignerAccountDoesNotExist,
     #[error(transparent)]
     Other(#[from] StdError),
 }
@@ -88,16 +90,18 @@ impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
     }
 
     /// Get balances of given address
-    pub fn account_data<A: Into<AccountId32>>(&self, address: A) -> Result<AccountData> {
-        self.account_info(address).map(|i| i.data)
+    /// Returns None because the account can not exist
+    pub fn account_data<A: Into<AccountId32>>(&self, address: A) -> Result<Option<AccountData>> {
+        self.account_info(address).map(|o| o.map(|i| i.data))
     }
 
     /// Get account info for given address
-    pub fn account_info<A: Into<AccountId32>>(&self, address: A) -> Result<AccountInfo> {
+    /// Returns None because the account can not exist
+    pub fn account_info<A: Into<AccountId32>>(&self, address: A) -> Result<Option<AccountInfo>> {
         let storage_key = storage_key_account_balance(address.into().as_ref());
 
         let json = state_get_storage(storage_key, None);
-        let info: AccountInfo = self.client.post(json)?.decode_into()?;
+        let info: Option<AccountInfo> = self.client.post(json)?.decode_into()?;
 
         Ok(info)
     }

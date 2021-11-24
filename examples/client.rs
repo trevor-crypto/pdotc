@@ -3,6 +3,7 @@ use pdotc::client::*;
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use pdotc::{blake2_256, AccountId32, MultiAddress, Ss58Codec, UncheckedExtrinsic};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
+use serde_json::Value;
 
 // WND address: 5CsanGiE6kBWxdW7qWkxSN6ZnD5hrLCz5nj94qJrqknRn3Jq
 const SEED_1: &str = "9d90b79e257eeb651e0f6759d14c35e5091161f97b079d6a7ca3645067c6ff3f";
@@ -54,12 +55,14 @@ impl Signer for KeyStore {
 
 impl RpcClient for PDotClient<ureq::Agent> {
     fn post(&self, json_req: serde_json::Value) -> Result<JsonRpcResponse> {
-        Ok(self
+        let v: Value = self
             .inner
             .post(&self.url)
             .send_json(json_req)
             .map_err(|e| ClientError::HttpClient(e.to_string()))?
-            .into_json()?)
+            .into_json()?;
+        dbg!(&v);
+        Ok(serde_json::from_value(v)?)
     }
 }
 
