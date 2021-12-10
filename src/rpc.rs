@@ -69,14 +69,15 @@ pub struct JsonRpcSuccess {
 }
 
 #[derive(Debug, Deserialize, thiserror::Error)]
-#[error("Json RPC error: code {{error.code}}, message {{error.message}}, data: {{error.data:?}}")]
+#[error("{error}")]
 pub struct JsonRpcError {
     pub jsonrpc: String,
     pub id: String,
     pub error: RpcError,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, thiserror::Error)]
+#[error("Json RPC error: [code: {code}, message: {message}, data: {data:?}]")]
 pub struct RpcError {
     pub code: i64,
     pub message: String,
