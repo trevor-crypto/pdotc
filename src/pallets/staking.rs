@@ -12,7 +12,7 @@ const WITHDRAW_UNBONDED: u8 = 3;
 const NOMINATE: u8 = 5;
 const CHILL: u8 = 6;
 const SET_CONTROLLER: u8 = 8;
-const REBOND: u8 = 13;
+const REBOND: u8 = 19;
 
 pub type ComposedStakingBond = (
     CallIndex,

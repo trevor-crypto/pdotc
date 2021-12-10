@@ -31,7 +31,7 @@ impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, N
     pub fn create_xt<C: Encode + Clone>(&self, call: C) -> Result<UncheckedExtrinsic<C>> {
         let gen_hash = self.genesis_hash;
         let runtime_version = self.runtime_version;
-        let extra = GenericExtra::new(Era::Immortal, self.nonce().expect("account nonce"));
+        let extra = GenericExtra::new(Era::Immortal, self.nonce().unwrap_or_default());
         let s_extra = (
             runtime_version.spec_version,
             runtime_version.transaction_version,
