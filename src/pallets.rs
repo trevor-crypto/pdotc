@@ -1,7 +1,7 @@
 use parity_scale_codec::Encode;
 use sp_core::crypto::AccountId32;
 
-use crate::client::{Api, ClientError, Result, Signer};
+use crate::client::{Api, ClientError, Polkadot, Result, Signer, Westend};
 use crate::rpc::RpcClient;
 use crate::{public_into_account, Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
 
@@ -11,7 +11,22 @@ pub mod storage;
 
 pub(crate) type CallIndex = [u8; 2];
 
-impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
+pub trait NetworkPallets {
+    const BALANCE_PALLET_IDX: u8;
+    const STAKING_PALLET_IDX: u8;
+}
+
+impl NetworkPallets for Polkadot {
+    const BALANCE_PALLET_IDX: u8 = 5;
+    const STAKING_PALLET_IDX: u8 = 7;
+}
+
+impl NetworkPallets for Westend {
+    const BALANCE_PALLET_IDX: u8 = 4;
+    const STAKING_PALLET_IDX: u8 = 6;
+}
+
+impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, Network> {
     /// Creates and signs an extrinsic that can be submitted to a node
     pub fn create_xt<C: Encode + Clone>(&self, call: C) -> Result<UncheckedExtrinsic<C>> {
         let gen_hash = self.genesis_hash;

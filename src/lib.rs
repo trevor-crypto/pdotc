@@ -1,3 +1,5 @@
+#![feature(const_fn_trait_bound)]
+
 use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
 pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58Codec};

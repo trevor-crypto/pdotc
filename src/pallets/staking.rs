@@ -1,19 +1,18 @@
 use parity_scale_codec::{Compact, Decode, Encode};
 
 use crate::client::{Api, Result, Signer};
-use crate::pallets::CallIndex;
+use crate::pallets::{CallIndex, NetworkPallets};
 use crate::rpc::RpcClient;
 use crate::{Balance, GenericAddress, UncheckedExtrinsic};
 
-const STAKING_PALLET_IDX: u8 = 6;
-const STAKING_BOND: CallIndex = [STAKING_PALLET_IDX, 0];
-const STAKING_BOND_EXTRA: CallIndex = [STAKING_PALLET_IDX, 1];
-const STAKING_UNBOND: CallIndex = [STAKING_PALLET_IDX, 2];
-const STAKING_WITHDRAW_UNBONDED: CallIndex = [STAKING_PALLET_IDX, 3];
-const STAKING_NOMINATE: CallIndex = [STAKING_PALLET_IDX, 5];
-const STAKING_CHILL: CallIndex = [STAKING_PALLET_IDX, 6];
-const STAKING_SET_CONTROLLER: CallIndex = [STAKING_PALLET_IDX, 8];
-const STAKING_REBOND: CallIndex = [STAKING_PALLET_IDX, 13];
+const BOND: u8 = 0;
+const BOND_EXTRA: u8 = 1;
+const UNBOND: u8 = 2;
+const WITHDRAW_UNBONDED: u8 = 3;
+const NOMINATE: u8 = 5;
+const CHILL: u8 = 6;
+const SET_CONTROLLER: u8 = 8;
+const REBOND: u8 = 13;
 
 pub type ComposedStakingBond = (
     CallIndex,
@@ -38,14 +37,18 @@ pub enum RewardDestination<Account> {
     None,
 }
 
-impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
+impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, Network> {
+    const fn staking_call(func_idx: u8) -> CallIndex {
+        [Network::STAKING_PALLET_IDX, func_idx]
+    }
+
     pub fn staking_bond(
         &self,
         controller: GenericAddress,
         amount: Balance,
         payee: RewardDestination<GenericAddress>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingBond>> {
-        let call = (STAKING_BOND, controller, Compact(amount), payee);
+        let call = (Self::staking_call(BOND), controller, Compact(amount), payee);
         self.create_xt(call)
     }
 
@@ -53,7 +56,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         &self,
         amount: Balance,
     ) -> Result<UncheckedExtrinsic<ComposedStakingBondExtra>> {
-        let call = (STAKING_BOND_EXTRA, Compact(amount));
+        let call = (Self::staking_call(BOND_EXTRA), Compact(amount));
         self.create_xt(call)
     }
 
@@ -61,7 +64,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         &self,
         amount: Balance,
     ) -> Result<UncheckedExtrinsic<ComposedStakingUnbond>> {
-        let call = (STAKING_UNBOND, Compact(amount));
+        let call = (Self::staking_call(UNBOND), Compact(amount));
         self.create_xt(call)
     }
 
@@ -69,7 +72,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         &self,
         num_slashing_spans: u32,
     ) -> Result<UncheckedExtrinsic<ComposedStakingWithdrawUnbonded>> {
-        let call = (STAKING_WITHDRAW_UNBONDED, num_slashing_spans);
+        let call = (Self::staking_call(WITHDRAW_UNBONDED), num_slashing_spans);
         self.create_xt(call)
     }
 
@@ -77,12 +80,12 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         &self,
         targets: Vec<GenericAddress>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingNominate>> {
-        let call = (STAKING_NOMINATE, targets);
+        let call = (Self::staking_call(NOMINATE), targets);
         self.create_xt(call)
     }
 
     pub fn staking_chill(&self) -> Result<UncheckedExtrinsic<ComposedStakingChill>> {
-        let call = STAKING_CHILL;
+        let call = Self::staking_call(CHILL);
         self.create_xt(call)
     }
 
@@ -90,7 +93,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         &self,
         controller: GenericAddress,
     ) -> Result<UncheckedExtrinsic<ComposedStakingSetController>> {
-        let call = (STAKING_SET_CONTROLLER, controller);
+        let call = (Self::staking_call(SET_CONTROLLER), controller);
         self.create_xt(call)
     }
 
@@ -98,7 +101,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         &self,
         amount: Balance,
     ) -> Result<UncheckedExtrinsic<ComposedStakingRebond>> {
-        let call = (STAKING_REBOND, Compact(amount));
+        let call = (Self::staking_call(REBOND), Compact(amount));
         self.create_xt(call)
     }
 }

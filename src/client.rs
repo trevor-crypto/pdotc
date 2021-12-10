@@ -1,8 +1,11 @@
+use std::marker::PhantomData;
+
 use sp_core::crypto::AccountId32;
 use sp_core::ecdsa::Public;
 pub use sp_core::ecdsa::Signature;
 
 use crate::pallets::storage::storage_key_account_balance;
+use crate::pallets::NetworkPallets;
 use crate::rpc::{
     chain_get_genesis_hash, payment_query_fee_details, state_get_runtime_version,
     state_get_storage, JsonRpcError, RpcClient,
@@ -13,6 +16,11 @@ use crate::{AccountData, AccountInfo, FeeDetails, MultiSignature, RuntimeVersion
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 
 type StdError = Box<dyn std::error::Error + Send + Sync>;
+
+#[derive(Debug, Clone, Copy)]
+pub struct Polkadot;
+#[derive(Debug, Clone, Copy)]
+pub struct Westend;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ClientError {
@@ -54,15 +62,36 @@ pub trait Signer {
 }
 
 /// A struct to interface with a node's JsonRPC server
-pub struct Api<'c, S, Client: RpcClient> {
+pub struct Api<'c, S, Client: RpcClient, Network: NetworkPallets> {
     pub genesis_hash: H256,
     pub runtime_version: RuntimeVersion,
     pub signer: Option<S>,
     client: &'c Client,
+    network: std::marker::PhantomData<Network>,
 }
 
-impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
-    pub fn new(client: &'c Client) -> Result<Self> {
+impl<'c, S, Client: RpcClient> Api<'c, S, Client, Polkadot> {
+    pub fn polkadot(client: &'c Client) -> Result<Self> {
+        Self::new(client)
+    }
+
+    pub fn polkadot_with_signer(client: &'c Client, signer: S) -> Result<Self> {
+        Self::new_with_signer(client, signer)
+    }
+}
+
+impl<'c, S, Client: RpcClient> Api<'c, S, Client, Westend> {
+    pub fn westend(client: &'c Client) -> Result<Self> {
+        Self::new(client)
+    }
+
+    pub fn westend_with_signer(client: &'c Client, signer: S) -> Result<Self> {
+        Self::new_with_signer(client, signer)
+    }
+}
+
+impl<'c, S, Client: RpcClient, Network: NetworkPallets> Api<'c, S, Client, Network> {
+    fn new(client: &'c Client) -> Result<Self> {
         let genesis_hash = Self::genesis_hash(client)?;
         let runtime_version = Self::runtime_version(client)?;
         Ok(Api {
@@ -70,10 +99,11 @@ impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
             runtime_version,
             signer: None,
             client,
+            network: PhantomData,
         })
     }
 
-    pub fn new_with_signer(client: &'c Client, signer: S) -> Result<Self> {
+    fn new_with_signer(client: &'c Client, signer: S) -> Result<Self> {
         let mut client = Self::new(client)?;
         client.signer = Some(signer);
         Ok(client)

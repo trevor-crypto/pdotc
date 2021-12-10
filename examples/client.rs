@@ -1,5 +1,6 @@
 use parity_scale_codec::Decode;
 use pdotc::client::*;
+use pdotc::pallets::staking::RewardDestination;
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use pdotc::{blake2_256, AccountId32, MultiAddress, Ss58Codec, UncheckedExtrinsic};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
@@ -66,8 +67,15 @@ impl RpcClient for PDotClient<ureq::Agent> {
     }
 }
 
-impl Default for PDotClient<ureq::Agent> {
-    fn default() -> Self {
+impl PDotClient<ureq::Agent> {
+    fn dot() -> Self {
+        Self {
+            inner: ureq::agent(),
+            url: "https://rpc.polkadot.io".to_string(),
+        }
+    }
+
+    fn wnd() -> Self {
         Self {
             inner: ureq::agent(),
             url: "https://westend-rpc.polkadot.io".to_string(),
@@ -76,9 +84,9 @@ impl Default for PDotClient<ureq::Agent> {
 }
 
 fn main() {
-    let client = PDotClient::default();
+    let client = PDotClient::wnd();
     let keystore = KeyStore::default();
-    let api = Api::new_with_signer(&client, keystore).unwrap();
+    let api = Api::westend_with_signer(&client, keystore).unwrap();
 
     // get balance
     let balance = api
@@ -116,7 +124,61 @@ fn main() {
         .unwrap()
     );
 
+    // staking bond
+    let bond_xt_hex = api
+        .staking_bond(
+            MultiAddress::Id(
+                AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe")
+                    .unwrap(),
+            ),
+            1000,
+            RewardDestination::Stash,
+        )
+        .expect("Created xt")
+        .as_hex();
+    dbg!(&bond_xt_hex);
+
+    // staking unbond
+    let unbond_xt_hex = api.staking_unbond(1000).expect("Created xt").as_hex();
+    dbg!(&unbond_xt_hex);
+
     // send out the transfer xt
     // let tx_hash = client.send_extrinstic(&xt_hex).unwrap();
     // dbg!(tx_hash);
+
+    println!("Polkadot client");
+
+    let client = PDotClient::dot();
+    let keystore = KeyStore::default();
+    let api = Api::polkadot_with_signer(&client, keystore).unwrap();
+
+    // sign a tx
+    let xt = api
+        .balance_transfer(
+            MultiAddress::Id(
+                AccountId32::from_string("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT")
+                    .unwrap(),
+            ),
+            1000,
+        )
+        .expect("Created xt");
+    let xt_hex = xt.as_hex();
+    dbg!(&xt_hex);
+
+    // get the fee for xt
+    let fees = api.fee_details(&xt_hex, None).unwrap();
+    dbg!(fees);
+
+    let bond_xt_hex = api
+        .staking_bond(
+            MultiAddress::Id(
+                AccountId32::from_string("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT")
+                    .unwrap(),
+            ),
+            1000,
+            RewardDestination::Stash,
+        )
+        .expect("Created xt")
+        .as_hex();
+    dbg!(&bond_xt_hex);
 }
