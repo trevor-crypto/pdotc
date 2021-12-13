@@ -284,7 +284,6 @@ pub struct InclusionFee {
     /// transaction.
     #[serde(deserialize_with = "deser_number_or_hex")]
     pub len_fee: Balance,
-    /// 
     /// - `targeted_fee_adjustment`: This is a multiplier that can tune the
     ///   final fee based on the congestion of the network.
     /// - `weight_fee`: This amount is computed based on the weight of the
