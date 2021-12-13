@@ -1,28 +1,23 @@
+use std::lazy::{SyncLazy, SyncOnceCell};
+
 use paste::paste;
-use pdotc::client::Api;
+use pdotc::client::{Api, Westend};
+use ureq::Agent;
 
-use crate::{KeyStore, PDotClient};
+use crate::{cmp_xt, KeyStore, PDotClient};
 
-macro_rules! cmp_xt {
-    ($call:ident, $expect: literal $(,$args:literal),*) => {
-        paste! {
-            #[test]
-            fn  [<test_ $call>]() {
-                let client = PDotClient::wnd();
-                let keystore = KeyStore::default();
-                let api = Api::westend_with_signer(&client, keystore).unwrap();
+static CLIENT: SyncOnceCell<PDotClient<Agent>> = SyncOnceCell::new();
 
-                let xt = $crate::xt::$call(&api, $($args)*);
-                assert_eq!(xt, $expect);
-            }
-         }
-    };
-}
+static API: SyncLazy<Api<KeyStore, PDotClient<Agent>, Westend>> = SyncLazy::new(|| {
+    let client = CLIENT.get_or_init(PDotClient::wnd);
+    let keystore = KeyStore::default();
+    Api::westend_with_signer(&*client, keystore).unwrap()
+});
 
 cmp_xt!(staking_rebond, "0xad01840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02562b451662af582c67e791446af4cb442d2373caed65ffe7f7fdfe5be4cb1bb946fcf31703159e1ba13fda097040282d13240e7b20711e668c29b3d8ac3a6540010000000613a10f");
 cmp_xt!(staking_bond_extra, "0xad01840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf0206532cb3a071945d0e33bc88476477571e873323503159be054f664784f3e7c96ff6b3df5894839f3411c7953cc242644c20f6b46d4cce6033d85c29494380b5010000000601a10f");
 cmp_xt!(staking_unbond, "0xad01840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf0235417d4c5405ca5ea5d405035f213e26597a0bd155f95e1fb89d86f0f0388de33f5be5967cb70246ad158f23eba7de31aad4884ff60ede97ace08a8d1115732d010000000602a10f");
-cmp_xt!(staking_withdraw_unbonded, "0xb501840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf027c1da7a27de23dfd47a6eac857d231a9072e76d2fe1d1a9ded0a611177d836da047c11f7fba127e1ef15ffb342cafd1374fb464fdb0484d4c43fb28e93adffbb01000000070300000000");
+cmp_xt!(staking_withdraw_unbonded, "0xb501840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02c9675c66626c37164de77ae138715ca81418ecd3bd960be015831e40d36e6f53033f0120f64b04adc7318ea57c4336b89198e16e367aa6fe7de173fbecafadf901000000060300000000");
 cmp_xt!(staking_chill, "0xa501840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02d851f7f9b1afd6fefe265b4edb3956456bb9dc9e69d17683247f6a4f36a496230127b55ffa5a143063953145bc2a04dfa2d74708cdb1df77e057f9207369be32000000000606");
 cmp_xt!(
     balance_transfer, "0x3102840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf029a3bba780f832cb8d5e29420c9b2cf76512c5b887c37c7bfbf6dbf5e85a2cfa408f81284281d1b65f86f149ec7264c55f232bea9f06eb824c63708de6cf786a900000000040000ff0011afc404c2f8c72ec8bcdeb64d6367822bf3a205a9ac4c1b17ffa75c3f0fa10f",

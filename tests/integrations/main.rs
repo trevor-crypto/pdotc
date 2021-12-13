@@ -1,3 +1,5 @@
+#![feature(once_cell)]
+
 use pdotc::blake2_256;
 use pdotc::client::{ClientError, Result, Signer};
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
@@ -67,6 +69,18 @@ impl RpcClient for PDotClient<ureq::Agent> {
     }
 }
 
+impl RpcClient for &PDotClient<ureq::Agent> {
+    fn post(&self, json_req: serde_json::Value) -> Result<JsonRpcResponse> {
+        let v: Value = self
+            .inner
+            .post(&self.url)
+            .send_json(json_req)
+            .map_err(|e| ClientError::HttpClient(e.to_string()))?
+            .into_json()?;
+        Ok(serde_json::from_value(v)?)
+    }
+}
+
 impl PDotClient<ureq::Agent> {
     pub fn dot() -> Self {
         Self {
@@ -81,4 +95,17 @@ impl PDotClient<ureq::Agent> {
             url: "https://westend-rpc.polkadot.io".to_string(),
         }
     }
+}
+
+#[macro_export]
+macro_rules! cmp_xt {
+    ($call:ident, $expect: literal $(,$args:literal),*) => {
+        paste! {
+            #[test]
+            fn  [<test_ $call>]() {
+                let xt = $crate::xt::$call(&API, $($args)*);
+                assert_eq!(xt, $expect);
+            }
+         }
+    };
 }

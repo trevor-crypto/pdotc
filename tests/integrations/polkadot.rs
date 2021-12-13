@@ -1,23 +1,18 @@
+use std::lazy::{SyncLazy, SyncOnceCell};
+
 use paste::paste;
-use pdotc::client::Api;
+use pdotc::client::{Api, Polkadot};
+use ureq::Agent;
 
-use crate::{KeyStore, PDotClient};
+use crate::{cmp_xt, KeyStore, PDotClient};
 
-macro_rules! cmp_xt {
-    ($call:ident, $expect: literal $(,$args:literal),*) => {
-        paste! {
-            #[test]
-            fn  [<test_ $call>]() {
-                let client = PDotClient::dot();
-                let keystore = KeyStore::default();
-                let api = Api::polkadot_with_signer(&client, keystore).unwrap();
+static CLIENT: SyncOnceCell<PDotClient<Agent>> = SyncOnceCell::new();
 
-                let xt = $crate::xt::$call(&api, $($args)*);
-                assert_eq!(xt, $expect);
-            }
-         }
-    };
-}
+static API: SyncLazy<Api<KeyStore, PDotClient<Agent>, Polkadot>> = SyncLazy::new(|| {
+    let client = CLIENT.get_or_init(PDotClient::dot);
+    let keystore = KeyStore::default();
+    Api::polkadot_with_signer(&*client, keystore).unwrap()
+});
 
 cmp_xt!(staking_rebond, "0xad01840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf0212324c8b170ef2bcfa0feb39d25a5827916e738ddeef675eba9d3d164f39c35b3e71fb074d63e70b874f8f23bec84041d41ca7751a1d854eabdd0dd12a2f6751010000000713a10f");
 cmp_xt!(staking_bond_extra, "0xad01840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02fff147d31f5478109b4d58a67f87c5fde938089350afb983320c6b5c6abce8f116976ab54ddeb74f9052b155ae82944c386b99e6629d52cffb33ba2b7f583a17000000000701a10f");
