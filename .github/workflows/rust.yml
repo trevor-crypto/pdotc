@@ -24,7 +24,7 @@ jobs:
           components: rustfmt, clippy
 
     - name: Run rustfmt
-      run: cargo fmt --verbose
+      run: cargo fmt -- --check
     - name: Run clippy
       run: cargo clippy --verbose
     - name: Build
