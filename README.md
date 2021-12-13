@@ -1,5 +1,6 @@
 [![Crates.io](https://img.shields.io/crates/v/pdotc?style=flat-square)](https://crates.io/crates/pdotc)
-[![docs.rs](https://img.shields.io/docsrs/pdotc?style=flat-square)](https://docs.rs/pdotc/0.1.1/pdotc)
+[![docs.rs](https://img.shields.io/docsrs/pdotc?style=flat-square)](https://docs.rs/pdotc/latest/pdotc)
+[![CI](https://github.com/trevor-crypto/pdotc/actions/workflows/rust.yml/badge.svg)](https://github.com/trevor-crypto/pdotc/actions/workflows/rust.yml)
 
 # pdotc
 
