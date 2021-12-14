@@ -1,9 +1,12 @@
 use parity_scale_codec::{Compact, Decode, Encode};
 
-use crate::client::{Api, Result, Signer};
-use crate::pallets::{CallIndex, NetworkPallets};
+use crate::client::{Api, Network, Result, Signer};
+use crate::pallets::CallIndex;
 use crate::rpc::RpcClient;
 use crate::{Balance, GenericAddress, UncheckedExtrinsic};
+
+const DOT_STAKING_PALLET_IDX: u8 = 7;
+const WND_STAKING_PALLET_IDX: u8 = 6;
 
 const BOND: u8 = 0;
 const BOND_EXTRA: u8 = 1;
@@ -37,9 +40,13 @@ pub enum RewardDestination<Account> {
     None,
 }
 
-impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, Network> {
-    const fn staking_call(func_idx: u8) -> CallIndex {
-        [Network::STAKING_PALLET_IDX, func_idx]
+impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
+    fn staking_call(&self, func_idx: u8) -> CallIndex {
+        let pallet_idx = match self.network {
+            Network::Polkadot => DOT_STAKING_PALLET_IDX,
+            Network::Westend => WND_STAKING_PALLET_IDX,
+        };
+        [pallet_idx, func_idx]
     }
 
     pub fn staking_bond(
@@ -48,7 +55,7 @@ impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, N
         amount: Balance,
         payee: RewardDestination<GenericAddress>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingBond>> {
-        let call = (Self::staking_call(BOND), controller, Compact(amount), payee);
+        let call = (self.staking_call(BOND), controller, Compact(amount), payee);
         self.create_xt(call)
     }
 
@@ -56,7 +63,7 @@ impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, N
         &self,
         amount: Balance,
     ) -> Result<UncheckedExtrinsic<ComposedStakingBondExtra>> {
-        let call = (Self::staking_call(BOND_EXTRA), Compact(amount));
+        let call = (self.staking_call(BOND_EXTRA), Compact(amount));
         self.create_xt(call)
     }
 
@@ -64,7 +71,7 @@ impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, N
         &self,
         amount: Balance,
     ) -> Result<UncheckedExtrinsic<ComposedStakingUnbond>> {
-        let call = (Self::staking_call(UNBOND), Compact(amount));
+        let call = (self.staking_call(UNBOND), Compact(amount));
         self.create_xt(call)
     }
 
@@ -72,7 +79,7 @@ impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, N
         &self,
         num_slashing_spans: u32,
     ) -> Result<UncheckedExtrinsic<ComposedStakingWithdrawUnbonded>> {
-        let call = (Self::staking_call(WITHDRAW_UNBONDED), num_slashing_spans);
+        let call = (self.staking_call(WITHDRAW_UNBONDED), num_slashing_spans);
         self.create_xt(call)
     }
 
@@ -80,12 +87,12 @@ impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, N
         &self,
         targets: Vec<GenericAddress>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingNominate>> {
-        let call = (Self::staking_call(NOMINATE), targets);
+        let call = (self.staking_call(NOMINATE), targets);
         self.create_xt(call)
     }
 
     pub fn staking_chill(&self) -> Result<UncheckedExtrinsic<ComposedStakingChill>> {
-        let call = Self::staking_call(CHILL);
+        let call = self.staking_call(CHILL);
         self.create_xt(call)
     }
 
@@ -93,7 +100,7 @@ impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, N
         &self,
         controller: GenericAddress,
     ) -> Result<UncheckedExtrinsic<ComposedStakingSetController>> {
-        let call = (Self::staking_call(SET_CONTROLLER), controller);
+        let call = (self.staking_call(SET_CONTROLLER), controller);
         self.create_xt(call)
     }
 
@@ -101,7 +108,7 @@ impl<S: Signer, Client: RpcClient, Network: NetworkPallets> Api<'_, S, Client, N
         &self,
         amount: Balance,
     ) -> Result<UncheckedExtrinsic<ComposedStakingRebond>> {
-        let call = (Self::staking_call(REBOND), Compact(amount));
+        let call = (self.staking_call(REBOND), Compact(amount));
         self.create_xt(call)
     }
 }
