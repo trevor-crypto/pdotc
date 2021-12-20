@@ -104,7 +104,7 @@ impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
     }
 
     fn genesis_hash(client: &Client) -> Result<H256> {
-        let json = client.post(chain_get_genesis_hash())?.into_string()?;
+        let json = client.post(chain_get_genesis_hash())?.into_result()?;
         let hash = H256::from_hex(json)?;
         Ok(hash)
     }
