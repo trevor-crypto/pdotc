@@ -15,7 +15,7 @@ pub trait RpcClient {
 
     fn send_extrinsic(&self, xt: &str) -> Result<String> {
         let json = author_submit_extrinsic(xt);
-        Ok(self.post(json)?.into_string()?)
+        self.post(json)?.into_result()
     }
 }
 
@@ -33,14 +33,6 @@ impl JsonRpcResponse {
             JsonRpcResponse::Success(s) => Ok(serde_json::from_value::<T>(s.result)?),
             JsonRpcResponse::Error(e) => Err(ClientError::JsonRpcError(e)),
             JsonRpcResponse::String(s) => Ok(serde_json::from_str(&s)?),
-        }
-    }
-
-    pub fn into_string(self) -> Result<String, JsonRpcError> {
-        match self {
-            JsonRpcResponse::Success(s) => Ok(s.result.to_string()),
-            JsonRpcResponse::Error(e) => Err(e),
-            JsonRpcResponse::String(s) => Ok(s),
         }
     }
 
