@@ -4,11 +4,13 @@ pub use sp_core::ecdsa::Signature;
 
 use crate::pallets::storage::storage_key_account_balance;
 use crate::rpc::{
-    chain_get_genesis_hash, payment_query_fee_details, state_get_runtime_version,
-    state_get_storage, JsonRpcError, RpcClient,
+    chain_get_block, chain_get_block_hash, chain_get_genesis_hash, payment_query_fee_details,
+    state_get_runtime_version, state_get_storage, JsonRpcError, RpcClient,
 };
 use crate::utils::FromHexString;
-use crate::{AccountData, AccountInfo, FeeDetails, MultiSignature, RuntimeVersion, H256};
+use crate::{
+    AccountData, AccountInfo, FeeDetails, MultiSignature, RuntimeVersion, SignedBlock, H256,
+};
 
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 
@@ -137,6 +139,18 @@ impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
         let info: Option<AccountInfo> = self.client.post(json)?.decode_into()?;
 
         Ok(info)
+    }
+
+    /// Gets block of specified hash or current block if `hash` is `None`
+    pub fn block(&self, hash: Option<H256>) -> Result<SignedBlock> {
+        self.client.post(chain_get_block(hash))?.into_result()
+    }
+
+    /// Gets block hash of block `number` or current block if `number` is `None`
+    pub fn block_hash(&self, number: Option<u32>) -> Result<H256> {
+        self.client
+            .post(chain_get_block_hash(number))?
+            .into_result()
     }
 
     /// Calculate a fee for given extrinsic

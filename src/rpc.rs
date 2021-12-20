@@ -78,12 +78,20 @@ pub struct RpcError {
 
 // JSON RPC REQUESTS
 
+pub fn chain_get_block(hash: Option<H256>) -> Value {
+    chain_get_block_with_id(hash, 1)
+}
+
 pub fn chain_get_block_hash(number: Option<u32>) -> Value {
     chain_get_block_hash_with_id(number, 1)
 }
 
 pub fn chain_get_genesis_hash() -> Value {
     chain_get_block_hash(Some(0))
+}
+
+pub fn chain_get_block_with_id(hash: Option<H256>, id: u32) -> Value {
+    json_req("chain_getBlock", vec![hash], id)
 }
 
 pub fn chain_get_block_hash_with_id(number: Option<u32>, id: u32) -> Value {

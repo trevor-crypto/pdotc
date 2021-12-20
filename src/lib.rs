@@ -302,3 +302,23 @@ impl InclusionFee {
             .saturating_add(self.adjusted_weight_fee)
     }
 }
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SignedBlock {
+    pub block: Block,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Block {
+    pub header: Header,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Header {
+    pub parent_hash: H256,
+    #[serde(deserialize_with = "deser_number_or_hex")]
+    pub number: u128,
+}

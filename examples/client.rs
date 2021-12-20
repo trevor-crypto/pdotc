@@ -182,4 +182,7 @@ fn main() {
         .expect("Created xt")
         .as_hex();
     dbg!(&bond_xt_hex);
+
+    let res = api.block(None).expect("current block");
+    dbg!(res.block.header);
 }
