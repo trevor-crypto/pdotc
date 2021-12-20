@@ -92,6 +92,7 @@ fn main() {
     let balance = api
         .account_data(
             AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe").unwrap(),
+            None,
         )
         .unwrap();
     dbg!(balance);
