@@ -20,6 +20,7 @@ type StdError = Box<dyn std::error::Error + Send + Sync>;
 pub(crate) enum Network {
     Polkadot,
     Westend,
+    Kusama,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -85,6 +86,14 @@ impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
 
     pub fn westend_with_signer(client: &'c Client, signer: S) -> Result<Self> {
         Self::new_with_signer(client, signer, Network::Westend)
+    }
+
+    pub fn kusama(client: &'c Client) -> Result<Self> {
+        Self::new(client, Network::Kusama)
+    }
+
+    pub fn kusama_with_signer(client: &'c Client, signer: S) -> Result<Self> {
+        Self::new_with_signer(client, signer, Network::Kusama)
     }
 
     fn new(client: &'c Client, network: Network) -> Result<Self> {

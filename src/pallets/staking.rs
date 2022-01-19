@@ -7,6 +7,7 @@ use crate::{Balance, GenericAddress, UncheckedExtrinsic};
 
 const DOT_STAKING_PALLET_IDX: u8 = 7;
 const WND_STAKING_PALLET_IDX: u8 = 6;
+const KSM_STAKING_PALLET_IDX: u8 = 6;
 
 const BOND: u8 = 0;
 const BOND_EXTRA: u8 = 1;
@@ -45,6 +46,7 @@ impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
         let pallet_idx = match self.network {
             Network::Polkadot => DOT_STAKING_PALLET_IDX,
             Network::Westend => WND_STAKING_PALLET_IDX,
+            Network::Kusama => KSM_STAKING_PALLET_IDX,
         };
         [pallet_idx, func_idx]
     }

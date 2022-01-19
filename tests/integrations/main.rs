@@ -6,6 +6,7 @@ use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
 use serde_json::Value;
 
+mod kusama;
 mod polkadot;
 mod westend;
 mod xt;
@@ -95,6 +96,13 @@ impl PDotClient<ureq::Agent> {
             url: "https://westend-rpc.polkadot.io".to_string(),
         }
     }
+
+    pub fn ksm() -> Self {
+        Self {
+            inner: ureq::agent(),
+            url: "https://kusama-rpc.polkadot.io".to_string(),
+        }
+    }
 }
 
 /// Validate by checking xt fee on blockchain
@@ -105,6 +113,7 @@ macro_rules! validate_xt {
             #[test]
             fn  [<test_ $call>]() {
                 let xt = $crate::xt::$call(&API, $($args)*);
+                dbg!(&xt);
                 let res = API.fee_details(&xt, None);
                 dbg!(&res);
                 assert!(res.is_ok());

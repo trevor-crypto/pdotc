@@ -9,12 +9,14 @@ pub type ComposedTransfer = (CallIndex, GenericAddress, Compact<Balance>);
 
 const DOT_BALANCE_PALLET_IDX: u8 = 5;
 const WND_BALANCE_PALLET_IDX: u8 = 4;
+const KSM_BALANCE_PALLET_IDX: u8 = 4;
 
 impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
     fn balances_call(&self) -> CallIndex {
         let pallet_idx = match self.network {
             Network::Polkadot => DOT_BALANCE_PALLET_IDX,
             Network::Westend => WND_BALANCE_PALLET_IDX,
+            Network::Kusama => KSM_BALANCE_PALLET_IDX,
         };
         [pallet_idx, 0]
     }
