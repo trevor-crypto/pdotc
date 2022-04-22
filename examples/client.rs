@@ -184,5 +184,5 @@ fn main() {
     dbg!(&bond_xt_hex);
 
     let res = api.block(None).expect("current block");
-    dbg!(res.block.header);
+    dbg!(res.block.timestamp(), res.block.header);
 }

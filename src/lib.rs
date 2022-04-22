@@ -4,6 +4,7 @@ pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58AddressFormatRegis
 pub use sp_core::ecdsa::{Public, Signature};
 pub use sp_core::{blake2_256, H256};
 
+use crate::pallets::timestamp::decode_timestamp;
 use crate::utils::deser_number_or_hex;
 
 pub mod client;
@@ -311,6 +312,14 @@ pub struct SignedBlock {
 #[serde(rename_all = "camelCase")]
 pub struct Block {
     pub header: Header,
+    pub extrinsics: Vec<String>,
+}
+
+impl Block {
+    /// Get timestamp that is set on the Block
+    pub fn timestamp(&self) -> Option<u64> {
+        self.extrinsics.iter().find_map(|e| decode_timestamp(e))
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

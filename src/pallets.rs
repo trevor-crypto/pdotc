@@ -8,6 +8,7 @@ use crate::{public_into_account, Era, GenericExtra, SignedPayload, UncheckedExtr
 pub mod balances;
 pub mod staking;
 pub mod storage;
+pub mod timestamp;
 
 pub(crate) type CallIndex = [u8; 2];
 
