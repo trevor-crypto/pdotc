@@ -4,7 +4,7 @@
 
 # pdotc
 
-### A Minimal Polkadot/Westend Client
+### A Minimal Polkadot/Kusama/Westend Client
 
 Inspired by [`substrate-api-client`](https://github.com/scs/substrate-api-client) with some logic copied from substrate crates
 
