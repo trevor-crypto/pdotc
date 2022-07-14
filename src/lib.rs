@@ -16,7 +16,7 @@ pub type GenericAddress = MultiAddress<AccountId32, ()>;
 
 pub type Balance = u128;
 
-#[derive(Clone, Debug, Decode, Encode, PartialEq)]
+#[derive(Clone, Debug, Decode, Encode, PartialEq, Eq)]
 pub enum MultiAddress<AccountId, AccountIndex> {
     /// It's an account ID (pubkey).
     Id(AccountId),
@@ -48,7 +48,7 @@ pub fn public_into_account(p: Public) -> AccountId32 {
     hash.into()
 }
 
-#[derive(Clone, Debug, Decode, Encode, PartialEq)]
+#[derive(Clone, Debug, Decode, Encode, PartialEq, Eq)]
 pub enum MultiSignature {
     /// An ECDSA/SECP256k1 signature.
     #[codec(index = 2)]
@@ -59,7 +59,7 @@ pub enum MultiSignature {
 /// current hash, ...others
 pub type SignedExtra = (u32, u32, H256, H256, (), (), ());
 
-#[derive(Clone, Copy, Debug, Decode, Encode, PartialEq)]
+#[derive(Clone, Copy, Debug, Decode, Encode, PartialEq, Eq)]
 pub struct GenericExtra(Era, Compact<u32>, Compact<Balance>);
 
 impl GenericExtra {
@@ -68,12 +68,12 @@ impl GenericExtra {
     }
 }
 
-#[derive(Clone, Copy, Debug, Decode, Encode, PartialEq)]
+#[derive(Clone, Copy, Debug, Decode, Encode, PartialEq, Eq)]
 pub enum Era {
     Immortal,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UncheckedExtrinsic<Call> {
     /// Address pubkey, Signature, Extras
     pub signature: Option<(GenericAddress, MultiSignature, GenericExtra)>,
@@ -259,9 +259,7 @@ pub struct FeeDetails {
 impl FeeDetails {
     /// Returns the final fee.
     ///
-    /// ```ignore
     /// final_fee = inclusion_fee + tip;
-    /// ```
     pub fn final_fee(&self) -> Balance {
         self.inclusion_fee
             .as_ref()

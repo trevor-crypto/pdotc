@@ -1,4 +1,4 @@
-use std::lazy::{SyncLazy, SyncOnceCell};
+use std::sync::{LazyLock, OnceLock};
 
 use paste::paste;
 use pdotc::client::Api;
@@ -6,12 +6,12 @@ use ureq::Agent;
 
 use crate::{validate_xt, KeyStore, PDotClient};
 
-static CLIENT: SyncOnceCell<PDotClient<Agent>> = SyncOnceCell::new();
+static CLIENT: OnceLock<PDotClient<Agent>> = OnceLock::new();
 
-static API: SyncLazy<Api<KeyStore, PDotClient<Agent>>> = SyncLazy::new(|| {
+static API: LazyLock<Api<KeyStore, PDotClient<Agent>>> = LazyLock::new(|| {
     let client = CLIENT.get_or_init(PDotClient::ksm);
     let keystore = KeyStore::default();
-    Api::kusama_with_signer(&*client, keystore).unwrap()
+    Api::kusama_with_signer(client, keystore).unwrap()
 });
 
 validate_xt!(staking_rebond);
