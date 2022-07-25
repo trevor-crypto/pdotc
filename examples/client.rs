@@ -2,7 +2,7 @@ use parity_scale_codec::Decode;
 use pdotc::client::*;
 use pdotc::pallets::staking::RewardDestination;
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
-use pdotc::{blake2_256, AccountId32, MultiAddress, Ss58Codec, UncheckedExtrinsic};
+use pdotc::{account_from_ss58check_with_version, blake2_256, MultiAddress, UncheckedExtrinsic};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
 use serde_json::Value;
 
@@ -91,7 +91,9 @@ fn main() {
     // get balance
     let balance = api
         .account_data(
-            AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe").unwrap(),
+            account_from_ss58check_with_version("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe")
+                .unwrap()
+                .0,
             None,
         )
         .unwrap();
@@ -101,8 +103,11 @@ fn main() {
     let xt = api
         .balance_transfer(
             MultiAddress::Id(
-                AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe")
-                    .unwrap(),
+                account_from_ss58check_with_version(
+                    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
+                )
+                .unwrap()
+                .0,
             ),
             1000,
         )
@@ -129,8 +134,11 @@ fn main() {
     let bond_xt_hex = api
         .staking_bond(
             MultiAddress::Id(
-                AccountId32::from_string("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe")
-                    .unwrap(),
+                account_from_ss58check_with_version(
+                    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
+                )
+                .unwrap()
+                .0,
             ),
             1000,
             RewardDestination::Stash,
@@ -157,8 +165,11 @@ fn main() {
     let xt = api
         .balance_transfer(
             MultiAddress::Id(
-                AccountId32::from_string("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT")
-                    .unwrap(),
+                account_from_ss58check_with_version(
+                    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
+                )
+                .unwrap()
+                .0,
             ),
             1000,
         )
@@ -173,8 +184,11 @@ fn main() {
     let bond_xt_hex = api
         .staking_bond(
             MultiAddress::Id(
-                AccountId32::from_string("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT")
-                    .unwrap(),
+                account_from_ss58check_with_version(
+                    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
+                )
+                .unwrap()
+                .0,
             ),
             1000,
             RewardDestination::Stash,

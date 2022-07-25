@@ -5,6 +5,7 @@ pub use sp_core::ecdsa::{Public, Signature};
 pub use sp_core::{blake2_256, H256};
 
 use crate::pallets::timestamp::decode_timestamp;
+pub use crate::utils::account_from_ss58check_with_version;
 use crate::utils::deser_number_or_hex;
 
 pub mod client;
