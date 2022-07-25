@@ -1,6 +1,6 @@
 [package]
 name = "pdotc"
-version = "0.2.8"
+version = "0.3.0"
 authors = ["Trevor Arjeski <trevor.arjeski@crypto.com>"]
 description = "A minimal polkadot/westend client"
 keywords = ["polkadot", "substrate"]
