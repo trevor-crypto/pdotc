@@ -1,4 +1,4 @@
-use base58::FromBase58;
+use base58::{FromBase58, ToBase58};
 use serde::Deserializer;
 use sp_core::crypto::{AccountId32, PublicError, Ss58AddressFormat};
 use sp_core::hashing::blake2_512;
@@ -103,4 +103,30 @@ pub fn account_from_ss58check_with_version(
 
 fn ss58hash(data: &[u8]) -> [u8; 64] {
     blake2_512(&[b"SS58PRE", data].concat())
+}
+
+/// Return the ss58-check string for this key.
+pub fn account_to_ss58check_with_version(
+    account: &AccountId32,
+    version: Ss58AddressFormat,
+) -> String {
+    // We mask out the upper two bits of the ident - SS58 Prefix currently only
+    // supports 14-bits
+    let ident: u16 = u16::from(version) & 0b0011_1111_1111_1111;
+    let mut v = match ident {
+        0..=63 => vec![ident as u8],
+        64..=16_383 => {
+            // upper six bits of the lower byte(!)
+            let first = ((ident & 0b0000_0000_1111_1100) as u8) >> 2;
+            // lower two bits of the lower byte in the high pos,
+            // lower bits of the upper byte in the low pos
+            let second = ((ident >> 8) as u8) | ((ident & 0b0000_0000_0000_0011) as u8) << 6;
+            vec![first | 0b01000000, second]
+        }
+        _ => unreachable!("masked out the upper two bits; qed"),
+    };
+    v.extend::<&[u8]>(account.as_ref());
+    let r = ss58hash(&v);
+    v.extend(&r[0..2]);
+    v.to_base58()
 }
