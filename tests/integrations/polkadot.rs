@@ -1,37 +1,50 @@
 use std::sync::{LazyLock, OnceLock};
 
 use paste::paste;
-use pdotc::client::Api;
+use pdotc::client::{Api, ApiBuilder};
+use pdotc::network::Polkadot;
 use ureq::Agent;
 
 use crate::{validate_xt, KeyStore, PDotClient};
 
 static CLIENT: OnceLock<PDotClient<Agent>> = OnceLock::new();
 
-static API: LazyLock<Api<KeyStore, PDotClient<Agent>>> = LazyLock::new(|| {
+static API: LazyLock<Api<KeyStore, PDotClient<Agent>, Polkadot>> = LazyLock::new(|| {
     let client = CLIENT.get_or_init(PDotClient::dot);
     let keystore = KeyStore::default();
-    Api::polkadot_with_signer(client, keystore).unwrap()
+    ApiBuilder::polkadot(client)
+        .signer(keystore)
+        .build()
+        .unwrap()
 });
 
-validate_xt!(staking_rebond);
-validate_xt!(staking_bond_extra);
-validate_xt!(staking_unbond);
-validate_xt!(staking_withdraw_unbonded);
-validate_xt!(staking_chill);
+validate_xt!(staking_rebond(), "0xad01840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02297474aee4355addac529f3c7228e0dd8dd760640a5212e2919c18a9d9d40c6f7d4bc809cf2280416c9c0bc72f89dd67c2baee0c2fa1f1242ce65998636a6fe1000000000713a10f");
+validate_xt!(staking_bond_extra(), "0xad01840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02f89f24b97d9805f37468c11479a3fc27b5620685a2115946545545cd97f2a7d604ae5376aa88f0ccbc0b9c5309e64fc36d1f88a2319f59f0378db2b42c3f10fb000000000701a10f");
+validate_xt!(staking_unbond(), "0xad01840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf025308dbd789ea2710c2cac08b3d566111527bc3caada6d2d9476c9c3d6c398c3409fcdfb4ad2ee0e681f0f075b09063613cc061b40cfad08b67191d9352f17e6f000000000702a10f");
+validate_xt!(staking_withdraw_unbonded(), "0xb501840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02e21a9a2bdfaf9ab8c73adc8d6f692dc6b5cac18688300e1b4f5fa57e96a311a8536ce044f7d056feb2a86a994fe16ca5a7021160fb1e363b7fbc8b679373c30d00000000070300000000");
+validate_xt!(staking_chill(), "0xa501840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02bc37b5996b4a0e55be5c941749596d44b79595696cdcabf61e1012e9e618496629703bd77530d46518d1b6d9fd4cc797b96ef81787b72435e0060ebb9b73934b000000000706");
 validate_xt!(
-    balance_transfer,
-    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"
+    balance_transfer("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT"),
+    "0x3102840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf0232c6d5da21a50a768e8cabdf4a2317b7d3503960f275fe334aee36a578593abb3fb98e60b865fb444edce325d433c891d5312f946d880db9e9b73524bf6dd3ea01000000050000bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7da10f"
 );
 validate_xt!(
-    staking_bond,
-    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"
+    staking_bond("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT"),
+    "0x3502840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02a894c981ecc2c8b011c09e46ef30c801d8e069ce018c03b2521b8290b5c4bfba560f6093d7a577807719218f3427250d8e040054740f9202a731331f26c9e89c01000000070000bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7da10f01"
 );
 validate_xt!(
-    staking_nominate,
-    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"
+    staking_nominate("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT"),
+    "0x2d02840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02b274613053b1e1704d15ab6128c7e3fc20f045a9a9896a596d9c606007eb01293b51ceaede591c56145d8d839f144cc2a8013d2e78703013e315c92e6b63fcd50100000007050400bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7d"
 );
 validate_xt!(
-    staking_set_controller,
-    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"
+    staking_set_controller("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT"),
+    "0x2902840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf0278721ed0d5a117630bc3ad560a3cacbc33275f0aaec9dbc618617e4c8ebf495d39c360204506a0d6588720c13257ab18a9c00679eef853ebb0386206d1678efa01000000070800bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7d"
 );
+validate_xt!(
+    proxy_add_proxy("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT"),
+    "0x3902840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf02472c613dbae8dee87f65f35bbdf5e5a528a559b3b2fb10d22cfac7e144121ee029cb5417500018624db07099e1da24dc78c5760d84f2093e8bcaf1834e714362000000001d01bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7d0300000000"
+);
+validate_xt!(
+    proxy_remove_proxy("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT"),
+    "0x3902840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf0279b2109af4a2bb4848536911da20a5a9f6e28f583f4a2bc18f049585bddcb5316eba3f791c7d6b2304a1fbabfb73f30e1858db6a496c9f630cb788c5576bb980000000001d02bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7d0300000000"
+);
+validate_xt!(proxy_remove_proxies(), "0xa501840023c0b6f69f5aff6c91972c64d1f7d1d22c78f825796553f4a261f514712dafaf022650c7df852492c1a170accf20f8f2460961e231671049564ac6cc2ad30a7e5711eadf350a016f4945bb6f551fcc1a8efb803945afd733961dd64c7edba0f051000000001d03");

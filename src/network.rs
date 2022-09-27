@@ -1,0 +1,63 @@
+use std::str::FromStr;
+
+use parity_scale_codec::Encode;
+use sp_core::crypto::AccountId32;
+
+use crate::pallets::proxy::{ProxyType, WestendProxyType};
+use crate::GenericAddress;
+
+pub trait SubstrateNetwork: Clone + Copy + 'static {
+    // Balance Pallet
+    const BALANCE_PALLET_IDX: u8;
+    const BALANCE_TRANSFER: u8 = 0;
+
+    // Staking Pallet
+    const STAKING_PALLET_IDX: u8;
+    const STAKING_BOND: u8 = 0;
+    const STAKING_BOND_EXTRA: u8 = 1;
+    const STAKING_UNBOND: u8 = 2;
+    const STAKING_WITHDRAW_UNBONDED: u8 = 3;
+    const STAKING_NOMINATE: u8 = 5;
+    const STAKING_CHILL: u8 = 6;
+    const STAKING_SET_CONTROLLER: u8 = 8;
+    const STAKING_REBOND: u8 = 19;
+
+    // Proxy Pallet
+    const PROXY_PALLET_IDX: u8;
+    const PROXY_ADD_PROXY: u8 = 1;
+    const PROXY_REMOVE_PROXY: u8 = 2;
+    const PROXY_REMOVE_PROXIES: u8 = 3;
+    type ProxyDelegateType: Encode + Clone + FromStr<Err = &'static str>;
+    type ProxyTypeType: Encode + Clone + FromStr<Err = &'static str>;
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Polkadot;
+#[derive(Debug, Copy, Clone)]
+pub struct Westend;
+#[derive(Debug, Copy, Clone)]
+pub struct Kusama;
+
+impl SubstrateNetwork for Polkadot {
+    const BALANCE_PALLET_IDX: u8 = 5;
+    const STAKING_PALLET_IDX: u8 = 7;
+    const PROXY_PALLET_IDX: u8 = 29;
+    type ProxyDelegateType = AccountId32;
+    type ProxyTypeType = ProxyType;
+}
+
+impl SubstrateNetwork for Westend {
+    const BALANCE_PALLET_IDX: u8 = 4;
+    const STAKING_PALLET_IDX: u8 = 6;
+    const PROXY_PALLET_IDX: u8 = 22;
+    type ProxyDelegateType = GenericAddress;
+    type ProxyTypeType = WestendProxyType;
+}
+
+impl SubstrateNetwork for Kusama {
+    const BALANCE_PALLET_IDX: u8 = 4;
+    const STAKING_PALLET_IDX: u8 = 6;
+    const PROXY_PALLET_IDX: u8 = 30;
+    type ProxyDelegateType = AccountId32;
+    type ProxyTypeType = ProxyType;
+}

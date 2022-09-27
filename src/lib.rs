@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
 pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58AddressFormatRegistry, Ss58Codec};
@@ -6,9 +8,9 @@ pub use sp_core::{blake2_256, H256};
 
 use crate::pallets::timestamp::decode_timestamp;
 use crate::utils::deser_number_or_hex;
-pub use crate::utils::{account_from_ss58check_with_version, account_to_ss58check_with_version};
 
 pub mod client;
+pub mod network;
 pub mod pallets;
 pub mod rpc;
 mod utils;
@@ -41,6 +43,16 @@ impl From<Public> for GenericAddress {
     fn from(p: Public) -> Self {
         let acct = public_into_account(p);
         MultiAddress::Id(acct)
+    }
+}
+
+impl FromStr for GenericAddress {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(AccountId32::from_ss58check(s)
+            .map_err(|_| "Expected ss58 address")?
+            .into())
     }
 }
 

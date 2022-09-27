@@ -2,9 +2,10 @@ use parity_scale_codec::Decode;
 use pdotc::client::*;
 use pdotc::pallets::staking::RewardDestination;
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
-use pdotc::{account_from_ss58check_with_version, blake2_256, MultiAddress, UncheckedExtrinsic};
+use pdotc::{blake2_256, MultiAddress, UncheckedExtrinsic};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
 use serde_json::Value;
+use sp_core::crypto::{AccountId32, Ss58Codec};
 
 // WND address: 5CsanGiE6kBWxdW7qWkxSN6ZnD5hrLCz5nj94qJrqknRn3Jq
 const SEED_1: &str = "9d90b79e257eeb651e0f6759d14c35e5091161f97b079d6a7ca3645067c6ff3f";
@@ -86,14 +87,19 @@ impl PDotClient<ureq::Agent> {
 fn main() {
     let client = PDotClient::wnd();
     let keystore = KeyStore::default();
-    let api = Api::westend_with_signer(&client, keystore).unwrap();
+    let api = ApiBuilder::westend(&client)
+        .signer(keystore)
+        .build()
+        .unwrap();
 
     // get balance
     let balance = api
         .account_data(
-            account_from_ss58check_with_version("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe")
-                .unwrap()
-                .0,
+            AccountId32::from_ss58check_with_version(
+                "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
+            )
+            .unwrap()
+            .0,
             None,
         )
         .unwrap();
@@ -103,7 +109,7 @@ fn main() {
     let xt = api
         .balance_transfer(
             MultiAddress::Id(
-                account_from_ss58check_with_version(
+                AccountId32::from_ss58check_with_version(
                     "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
                 )
                 .unwrap()
@@ -134,7 +140,7 @@ fn main() {
     let bond_xt_hex = api
         .staking_bond(
             MultiAddress::Id(
-                account_from_ss58check_with_version(
+                AccountId32::from_ss58check_with_version(
                     "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
                 )
                 .unwrap()
@@ -159,13 +165,16 @@ fn main() {
 
     let client = PDotClient::dot();
     let keystore = KeyStore::default();
-    let api = Api::polkadot_with_signer(&client, keystore).unwrap();
+    let api = ApiBuilder::polkadot(&client)
+        .signer(keystore)
+        .build()
+        .unwrap();
 
     // sign a tx
     let xt = api
         .balance_transfer(
             MultiAddress::Id(
-                account_from_ss58check_with_version(
+                AccountId32::from_ss58check_with_version(
                     "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
                 )
                 .unwrap()
@@ -184,7 +193,7 @@ fn main() {
     let bond_xt_hex = api
         .staking_bond(
             MultiAddress::Id(
-                account_from_ss58check_with_version(
+                AccountId32::from_ss58check_with_version(
                     "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
                 )
                 .unwrap()

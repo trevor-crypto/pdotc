@@ -1,6 +1,6 @@
 [package]
 name = "pdotc"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Trevor Arjeski <trevor.arjeski@crypto.com>"]
 description = "A minimal polkadot/westend client"
 keywords = ["polkadot", "substrate"]
@@ -11,10 +11,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-base58 = "0.2"
 hex = "0.4"
-parity-scale-codec = { version = "3.1", default-features = false, features = ["derive"] }
-sp-core = { version = "6.0", default-features = false, features = ["full_crypto"] }
+parity-scale-codec = { version = "3.2", default-features = false, features = ["derive"] }
+sp-core = { version = "6.0", default-features = false, features = ["std", "full_crypto"] }
 primitive-types = { version = "0.11", default-features = false, features = ["codec", "scale-info", "serde"] }
 sp-storage = "6.0"
 serde = "1"
