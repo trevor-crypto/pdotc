@@ -108,15 +108,15 @@ impl PDotClient<ureq::Agent> {
 /// Validate by checking xt fee on blockchain
 #[macro_export]
 macro_rules! validate_xt {
-    ($call:ident $(,$args:literal),*) => {
+    ($call:ident($($args:literal),*), $expected:literal) => {
         paste! {
             #[test]
             fn  [<test_ $call>]() {
                 let xt = $crate::xt::$call(&API, $($args)*);
-                dbg!(&xt);
-                let res = API.fee_details(&xt, None);
-                dbg!(&res);
-                assert!(res.is_ok());
+                assert_eq!(xt, $expected);
+                // let res = API.fee_details(&xt, None);
+                // dbg!(&res);
+                // assert!(res.is_ok());
             }
          }
     };

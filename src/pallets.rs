@@ -2,17 +2,19 @@ use parity_scale_codec::Encode;
 use sp_core::crypto::AccountId32;
 
 use crate::client::{Api, ClientError, Result, Signer};
+use crate::network::SubstrateNetwork;
 use crate::rpc::RpcClient;
 use crate::{public_into_account, Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
 
 pub mod balances;
+pub mod proxy;
 pub mod staking;
 pub mod storage;
 pub mod timestamp;
 
 pub(crate) type CallIndex = [u8; 2];
 
-impl<S: Signer, Client: RpcClient> Api<'_, S, Client> {
+impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     /// Creates and signs an extrinsic that can be submitted to a node
     pub fn create_xt<C: Encode + Clone>(&self, call: C) -> Result<UncheckedExtrinsic<C>> {
         let gen_hash = self.genesis_hash;

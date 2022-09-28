@@ -1,7 +1,10 @@
+use std::marker::PhantomData;
+
 use sp_core::crypto::AccountId32;
 use sp_core::ecdsa::Public;
 pub use sp_core::ecdsa::Signature;
 
+use crate::network::{Kusama, Polkadot, SubstrateNetwork, Westend};
 use crate::pallets::storage::storage_key_account_balance;
 use crate::rpc::{
     chain_get_block, chain_get_block_hash, chain_get_genesis_hash, payment_query_fee_details,
@@ -15,13 +18,6 @@ use crate::{
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 
 type StdError = Box<dyn std::error::Error + Send + Sync>;
-
-#[derive(Debug, Clone, Copy)]
-pub(crate) enum Network {
-    Polkadot,
-    Westend,
-    Kusama,
-}
 
 #[derive(Debug, thiserror::Error)]
 pub enum ClientError {
@@ -62,68 +58,95 @@ pub trait Signer {
     }
 }
 
-/// A struct to interface with a node's JsonRPC server
-pub struct Api<'c, S, Client: RpcClient> {
-    pub genesis_hash: H256,
-    pub runtime_version: RuntimeVersion,
-    pub signer: Option<S>,
-    client: &'c Client,
-    pub(crate) network: Network,
+pub struct ApiBuilder;
+
+impl<'c> ApiBuilder {
+    pub fn polkadot<C: RpcClient>(client: &'c C) -> ApiBuilderWithClient<'c, C, Polkadot> {
+        ApiBuilderWithClient {
+            client,
+            network: PhantomData,
+        }
+    }
+
+    pub fn westend<C: RpcClient>(client: &'c C) -> ApiBuilderWithClient<'c, C, Westend> {
+        ApiBuilderWithClient {
+            client,
+            network: PhantomData,
+        }
+    }
+
+    pub fn kusama<C: RpcClient>(client: &'c C) -> ApiBuilderWithClient<'c, C, Kusama> {
+        ApiBuilderWithClient {
+            client,
+            network: PhantomData,
+        }
+    }
 }
 
-impl<'c, S, Client: RpcClient> Api<'c, S, Client> {
-    pub fn polkadot(client: &'c Client) -> Result<Self> {
-        Self::new(client, Network::Polkadot)
+pub struct ApiBuilderWithClient<'c, C: RpcClient, N: SubstrateNetwork> {
+    client: &'c C,
+    network: PhantomData<N>,
+}
+
+impl<'c, C: RpcClient, N: SubstrateNetwork> ApiBuilderWithClient<'c, C, N> {
+    pub fn signer<S>(self, signer: S) -> ApiBuilderWithClientAndSigner<'c, S, C, N> {
+        ApiBuilderWithClientAndSigner {
+            client: self.client,
+            network: PhantomData,
+            signer: Some(signer),
+        }
     }
 
-    pub fn polkadot_with_signer(client: &'c Client, signer: S) -> Result<Self> {
-        Self::new_with_signer(client, signer, Network::Polkadot)
+    pub fn build<S>(self) -> Result<Api<'c, S, C, N>> {
+        ApiBuilderWithClientAndSigner {
+            client: self.client,
+            network: PhantomData,
+            signer: None,
+        }
+        .build()
     }
+}
 
-    pub fn westend(client: &'c Client) -> Result<Self> {
-        Self::new(client, Network::Westend)
-    }
+pub struct ApiBuilderWithClientAndSigner<'c, S, C: RpcClient, N: SubstrateNetwork> {
+    client: &'c C,
+    network: PhantomData<N>,
+    signer: Option<S>,
+}
 
-    pub fn westend_with_signer(client: &'c Client, signer: S) -> Result<Self> {
-        Self::new_with_signer(client, signer, Network::Westend)
-    }
-
-    pub fn kusama(client: &'c Client) -> Result<Self> {
-        Self::new(client, Network::Kusama)
-    }
-
-    pub fn kusama_with_signer(client: &'c Client, signer: S) -> Result<Self> {
-        Self::new_with_signer(client, signer, Network::Kusama)
-    }
-
-    fn new(client: &'c Client, network: Network) -> Result<Self> {
-        let genesis_hash = Self::genesis_hash(client)?;
-        let runtime_version = Self::runtime_version(client)?;
+impl<'c, S, C: RpcClient, N: SubstrateNetwork> ApiBuilderWithClientAndSigner<'c, S, C, N> {
+    pub fn build(self) -> Result<Api<'c, S, C, N>> {
+        let genesis_hash = genesis_hash(self.client)?;
+        let runtime_version = runtime_version(self.client)?;
         Ok(Api {
             genesis_hash,
             runtime_version,
-            signer: None,
-            client,
-            network,
+            signer: self.signer,
+            client: self.client,
+            network: PhantomData,
         })
     }
+}
 
-    fn new_with_signer(client: &'c Client, signer: S, network: Network) -> Result<Self> {
-        let mut client = Self::new(client, network)?;
-        client.signer = Some(signer);
-        Ok(client)
-    }
+fn genesis_hash<C: RpcClient>(client: &C) -> Result<H256> {
+    let json = client.post(chain_get_genesis_hash())?.into_result()?;
+    let hash = H256::from_hex(json)?;
+    Ok(hash)
+}
 
-    fn genesis_hash(client: &Client) -> Result<H256> {
-        let json = client.post(chain_get_genesis_hash())?.into_result()?;
-        let hash = H256::from_hex(json)?;
-        Ok(hash)
-    }
+fn runtime_version<C: RpcClient>(client: &C) -> Result<RuntimeVersion> {
+    client.post(state_get_runtime_version())?.into_result()
+}
 
-    fn runtime_version(client: &Client) -> Result<RuntimeVersion> {
-        client.post(state_get_runtime_version())?.into_result()
-    }
+/// A struct to interface with a node's JsonRPC server
+pub struct Api<'c, S, C: RpcClient, Network: SubstrateNetwork> {
+    pub(crate) genesis_hash: H256,
+    pub(crate) runtime_version: RuntimeVersion,
+    pub(crate) signer: Option<S>,
+    pub(crate) client: &'c C,
+    network: PhantomData<Network>,
+}
 
+impl<'c, S, C: RpcClient, N: SubstrateNetwork> Api<'c, S, C, N> {
     /// Get balances of given address
     /// Returns None because the account can not exist
     pub fn account_data<A: Into<AccountId32>>(
