@@ -15,7 +15,7 @@ pub fn balance_transfer<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
         1000,
     )
     .unwrap()
-    .as_hex()
+    .call_as_hex()
 }
 
 pub fn staking_bond<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
@@ -28,24 +28,24 @@ pub fn staking_bond<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
         RewardDestination::Stash,
     )
     .unwrap()
-    .as_hex()
+    .call_as_hex()
 }
 pub fn staking_bond_extra<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
 ) -> String {
-    api.staking_bond_extra(1000).unwrap().as_hex()
+    api.staking_bond_extra(1000).unwrap().call_as_hex()
 }
 
 pub fn staking_unbond<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
 ) -> String {
-    api.staking_unbond(1000).unwrap().as_hex()
+    api.staking_unbond(1000).unwrap().call_as_hex()
 }
 
 pub fn staking_withdraw_unbonded<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
 ) -> String {
-    api.staking_withdraw_unbonded(0).unwrap().as_hex()
+    api.staking_withdraw_unbonded(0).unwrap().call_as_hex()
 }
 
 pub fn staking_nominate<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
@@ -56,13 +56,13 @@ pub fn staking_nominate<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
         AccountId32::from_ss58check_with_version(addr).unwrap().0,
     )])
     .unwrap()
-    .as_hex()
+    .call_as_hex()
 }
 
 pub fn staking_chill<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
 ) -> String {
-    api.staking_chill().unwrap().as_hex()
+    api.staking_chill().unwrap().call_as_hex()
 }
 
 pub fn staking_set_controller<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
@@ -73,13 +73,13 @@ pub fn staking_set_controller<S: Signer, Client: RpcClient, N: SubstrateNetwork>
         AccountId32::from_ss58check_with_version(addr).unwrap().0,
     ))
     .unwrap()
-    .as_hex()
+    .call_as_hex()
 }
 
 pub fn staking_rebond<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
 ) -> String {
-    api.staking_rebond(1000).unwrap().as_hex()
+    api.staking_rebond(1000).unwrap().call_as_hex()
 }
 
 pub fn proxy_add_proxy<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
@@ -92,7 +92,7 @@ pub fn proxy_add_proxy<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
         0,
     )
     .unwrap()
-    .as_hex()
+    .call_as_hex()
 }
 
 pub fn proxy_remove_proxy<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
@@ -105,11 +105,11 @@ pub fn proxy_remove_proxy<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
         0,
     )
     .unwrap()
-    .as_hex()
+    .call_as_hex()
 }
 
 pub fn proxy_remove_proxies<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
 ) -> String {
-    api.remove_proxies().unwrap().as_hex()
+    api.remove_proxies().unwrap().call_as_hex()
 }

@@ -97,6 +97,10 @@ impl<Call: Encode> UncheckedExtrinsic<Call> {
     pub fn as_hex(&self) -> String {
         format!("0x{}", hex::encode(self.encode()))
     }
+
+    pub fn call_as_hex(&self) -> String {
+        format!("0x{}", hex::encode(self.function.encode()))
+    }
 }
 
 impl<Call> Encode for UncheckedExtrinsic<Call>
