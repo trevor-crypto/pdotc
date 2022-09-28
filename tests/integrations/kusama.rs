@@ -11,8 +11,7 @@ static CLIENT: OnceLock<PDotClient<Agent>> = OnceLock::new();
 
 static API: LazyLock<Api<KeyStore, PDotClient<Agent>, Kusama>> = LazyLock::new(|| {
     let client = CLIENT.get_or_init(PDotClient::ksm);
-    let keystore = KeyStore::default();
-    ApiBuilder::kusama(client).signer(keystore).build().unwrap()
+    ApiBuilder::kusama(client).build().unwrap()
 });
 
 validate_xt!(staking_rebond(), "0x0613a10f");

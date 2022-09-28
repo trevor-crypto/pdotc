@@ -17,21 +17,21 @@ pub(crate) type CallIndex = [u8; 2];
 impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     /// Creates and signs an extrinsic that can be submitted to a node
     pub fn create_xt<C: Encode + Clone>(&self, call: C) -> Result<UncheckedExtrinsic<C>> {
-        let gen_hash = self.genesis_hash;
-        let runtime_version = self.runtime_version;
-        let extra = GenericExtra::new(Era::Immortal, self.nonce().unwrap_or_default());
-        let s_extra = (
-            runtime_version.spec_version,
-            runtime_version.transaction_version,
-            gen_hash,
-            gen_hash,
-            (),
-            (),
-            (),
-        );
-        let raw_payload = SignedPayload::new(call.clone(), extra, s_extra);
-
         let signature = if let Some(signer) = &self.signer {
+            let gen_hash = self.genesis_hash;
+            let runtime_version = self.runtime_version;
+            let extra = GenericExtra::new(Era::Immortal, self.nonce().unwrap_or_default());
+            let s_extra = (
+                runtime_version.spec_version,
+                runtime_version.transaction_version,
+                gen_hash,
+                gen_hash,
+                (),
+                (),
+                (),
+            );
+            let raw_payload = SignedPayload::new(call.clone(), extra, s_extra);
+
             let from = signer.public()?.into();
             let sig = raw_payload.encoded(|payload| signer.sign(payload))?;
             Some((from, sig, extra))
