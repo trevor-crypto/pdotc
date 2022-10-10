@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use parity_scale_codec::Encode;
+use parity_scale_codec::{Decode, Encode};
 use sp_core::crypto::AccountId32;
 
 use crate::pallets::proxy::{ProxyType, WestendProxyType};
@@ -27,8 +27,8 @@ pub trait SubstrateNetwork: Clone + Copy + 'static {
     const PROXY_ADD_PROXY: u8 = 1;
     const PROXY_REMOVE_PROXY: u8 = 2;
     const PROXY_REMOVE_PROXIES: u8 = 3;
-    type ProxyDelegateType: Encode + Clone + FromStr<Err = &'static str>;
-    type ProxyTypeType: Encode + Clone + FromStr<Err = &'static str>;
+    type ProxyDelegateType: Encode + Decode + Clone + FromStr<Err = &'static str>;
+    type ProxyTypeType: Encode + Decode + Clone + FromStr<Err = &'static str>;
 }
 
 #[derive(Debug, Copy, Clone)]

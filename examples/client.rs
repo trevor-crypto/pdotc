@@ -208,4 +208,15 @@ fn main() {
 
     let res = api.block(None).expect("current block");
     dbg!(res.block.timestamp(), res.block.header);
+
+    let proxies = api
+        .proxies(
+            AccountId32::from_ss58check_with_version(
+                "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
+            )
+            .unwrap()
+            .0,
+        )
+        .expect("Proxy account list");
+    dbg!(proxies);
 }

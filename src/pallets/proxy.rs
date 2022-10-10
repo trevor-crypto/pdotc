@@ -6,8 +6,9 @@ use sp_core::crypto::AccountId32;
 
 use crate::client::{Api, Result, Signer};
 use crate::network::SubstrateNetwork;
+use crate::pallets::storage::storage_proxy_proxies;
 use crate::pallets::CallIndex;
-use crate::rpc::RpcClient;
+use crate::rpc::{state_get_storage, RpcClient};
 use crate::{GenericAddress, UncheckedExtrinsic};
 
 pub type ComposedProxyAddProxy = (CallIndex, AccountId32, ProxyType, u32);
@@ -71,6 +72,21 @@ impl FromStr for WestendProxyType {
     }
 }
 
+/// The parameters under which a particular account has a proxy relationship
+/// with some other account.
+/// https://github.com/paritytech/substrate/blob/master/frame/proxy/src/lib.rs
+#[derive(Debug, Encode, Decode, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+pub struct ProxyDefinition<AccountId, ProxyType, BlockNumber> {
+    /// The account which may act on behalf of another.
+    pub delegate: AccountId,
+    /// A value defining the subset of calls that it is allowed to make.
+    pub proxy_type: ProxyType,
+    /// The number of blocks that an announcement must be in place for before
+    /// the corresponding call may be dispatched. If zero, then no
+    /// announcement is needed.
+    pub delay: BlockNumber,
+}
+
 #[allow(clippy::type_complexity)]
 impl<S: Signer, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
     /// Register a proxy account for the sender that is able to make calls on
@@ -117,6 +133,21 @@ impl<S: Signer, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
     pub fn remove_proxies(&self) -> Result<UncheckedExtrinsic<ComposedProxyRemoveProxies>> {
         self.create_xt([N::PROXY_PALLET_IDX, N::PROXY_REMOVE_PROXIES])
     }
+
+    /// Returns proxies set for current account.
+    pub fn proxies<A: Into<AccountId32>>(
+        &self,
+        address: A,
+    ) -> Result<
+        Option<(
+            Vec<ProxyDefinition<AccountId32, N::ProxyTypeType, u32>>,
+            u128,
+        )>,
+    > {
+        let storage_key = storage_proxy_proxies(address.into().as_ref());
+        let json_req = state_get_storage(storage_key, None);
+        self.client.post(json_req)?.decode_into()
+    }
 }
 
 #[cfg(test)]
@@ -129,5 +160,47 @@ mod tests {
         staking.using_encoded(|slice| {
             assert_eq!(&slice, &b"\x03");
         });
+    }
+
+    #[test]
+    fn proxies_decode() {
+        let expected = (
+            vec![
+                ProxyDefinition {
+                    delegate: AccountId32::from_str(
+                        "5D4YdVdApsU3Y4Qf5kCbKgFEtPKLMqoQQHcA2U45XYxwkMR6",
+                    )
+                    .unwrap(),
+                    proxy_type: WestendProxyType::Staking,
+                    delay: 0u32,
+                },
+                ProxyDefinition {
+                    delegate: AccountId32::from_str(
+                        "5FTbktpmgu4oi2Nhn2qY8QuPyoJY3CDzpYFeqRcte5fZ5Yby",
+                    )
+                    .unwrap(),
+                    proxy_type: WestendProxyType::Staking,
+                    delay: 0u32,
+                },
+                ProxyDefinition {
+                    delegate: AccountId32::from_str(
+                        "5FsrYox6CGyZ7rovGAmn17mJyHXf8QFN82KoGYWz6eHnRRXW",
+                    )
+                    .unwrap(),
+                    proxy_type: WestendProxyType::Staking,
+                    delay: 0u32,
+                },
+            ],
+            1_005_350_000_000u128,
+        );
+        let got = hex::encode(expected.encode());
+        let encoded = "0c2c1d2c0f9cd4155eafb3d912536fbe14a8679e176c89f20033291202d7e0fb930200000000962acfcc6fdb0f3a0006748ec9164392d168d4c6d06b4cc0958cf8401d7a026c0200000000a8aa7e9be09ceb0d3db02ae159bd105253e553bb6c944de7d4c35dfda4ae772c020000000080958713ea0000000000000000000000";
+        assert_eq!(got, encoded);
+        let encoded = hex::decode(encoded).unwrap();
+        let decoded: (
+            Vec<ProxyDefinition<AccountId32, WestendProxyType, u32>>,
+            u128,
+        ) = Decode::decode(&mut encoded.as_slice()).unwrap();
+        assert_eq!(decoded, expected);
     }
 }
