@@ -7,6 +7,9 @@ use crate::pallets::proxy::{ProxyType, WestendProxyType};
 use crate::GenericAddress;
 
 pub trait SubstrateNetwork: Clone + Copy + 'static {
+    // Network name
+    const NAME: &'static str;
+
     // Balance Pallet
     const BALANCE_PALLET_IDX: u8;
     const BALANCE_TRANSFER: u8 = 0;
@@ -39,6 +42,7 @@ pub struct Westend;
 pub struct Kusama;
 
 impl SubstrateNetwork for Polkadot {
+    const NAME: &'static str = "polkadot";
     const BALANCE_PALLET_IDX: u8 = 5;
     const STAKING_PALLET_IDX: u8 = 7;
     const PROXY_PALLET_IDX: u8 = 29;
@@ -47,6 +51,7 @@ impl SubstrateNetwork for Polkadot {
 }
 
 impl SubstrateNetwork for Westend {
+    const NAME: &'static str = "westend";
     const BALANCE_PALLET_IDX: u8 = 4;
     const STAKING_PALLET_IDX: u8 = 6;
     const PROXY_PALLET_IDX: u8 = 22;
@@ -55,6 +60,7 @@ impl SubstrateNetwork for Westend {
 }
 
 impl SubstrateNetwork for Kusama {
+    const NAME: &'static str = "kusama";
     const BALANCE_PALLET_IDX: u8 = 4;
     const STAKING_PALLET_IDX: u8 = 6;
     const PROXY_PALLET_IDX: u8 = 30;
