@@ -37,10 +37,10 @@ validate_xt!(
 );
 validate_xt!(
     proxy_add_proxy("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT"),
-    "0x1d01bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7d0300000000"
+    "0x1d0100bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7d0300000000"
 );
 validate_xt!(
     proxy_remove_proxy("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT"),
-    "0x1d02bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7d0300000000"
+    "0x1d0200bbcd72f9f3d1782b57e512497ed7a1d3e2163333bb06c59723e28823798f5a7d0300000000"
 );
 validate_xt!(proxy_remove_proxies(), "0x1d03");

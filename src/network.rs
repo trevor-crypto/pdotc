@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use parity_scale_codec::{Decode, Encode};
-use sp_core::crypto::AccountId32;
 
 use crate::pallets::proxy::{ProxyType, WestendProxyType};
 use crate::GenericAddress;
@@ -46,7 +45,7 @@ impl SubstrateNetwork for Polkadot {
     const BALANCE_PALLET_IDX: u8 = 5;
     const STAKING_PALLET_IDX: u8 = 7;
     const PROXY_PALLET_IDX: u8 = 29;
-    type ProxyDelegateType = AccountId32;
+    type ProxyDelegateType = GenericAddress;
     type ProxyTypeType = ProxyType;
 }
 
@@ -64,6 +63,6 @@ impl SubstrateNetwork for Kusama {
     const BALANCE_PALLET_IDX: u8 = 4;
     const STAKING_PALLET_IDX: u8 = 6;
     const PROXY_PALLET_IDX: u8 = 30;
-    type ProxyDelegateType = AccountId32;
+    type ProxyDelegateType = GenericAddress;
     type ProxyTypeType = ProxyType;
 }
