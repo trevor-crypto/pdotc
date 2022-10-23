@@ -9,13 +9,7 @@ use crate::network::SubstrateNetwork;
 use crate::pallets::storage::storage_proxy_proxies;
 use crate::pallets::CallIndex;
 use crate::rpc::{state_get_storage, RpcClient};
-use crate::{GenericAddress, UncheckedExtrinsic};
-
-pub type ComposedProxyAddProxy = (CallIndex, AccountId32, ProxyType, u32);
-pub type ComposedProxyRemoveProxy = (CallIndex, AccountId32, ProxyType, u32);
-
-pub type WndComposedProxyAddProxy = (CallIndex, GenericAddress, WestendProxyType, u32);
-pub type WndComposedProxyRemoveProxy = (CallIndex, GenericAddress, WestendProxyType, u32);
+use crate::UncheckedExtrinsic;
 
 pub type ComposedProxyRemoveProxies = CallIndex;
 

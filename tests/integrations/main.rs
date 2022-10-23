@@ -112,11 +112,16 @@ macro_rules! validate_xt {
         paste! {
             #[test]
             fn  [<test_ $call>]() {
-                let xt = $crate::xt::$call(&API, $($args)*);
+                let xt = $crate::xt::$call(&API, $($args)*).call_as_hex();
                 assert_eq!(xt, $expected);
-                // let res = API.fee_details(&xt, None);
-                // dbg!(&res);
-                // assert!(res.is_ok());
+            }
+
+            #[test]
+            fn  [<test_ $call _fee>]() {
+                let xt = $crate::xt::$call(&API, $($args)*).as_hex();
+                let res = API.fee_details(&xt, None);
+                dbg!(&res);
+                assert!(res.is_ok());
             }
          }
     };
