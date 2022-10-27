@@ -18,9 +18,7 @@ jobs:
         ports:
           # Opens tcp port 8080 on the host and service container
           - 8080:8080
-    steps:
-      - name: Check sidecar
-        run: >-
+        options: >-
           --health-cmd "curl http://localhost:8080/blocks/head | jq"
           --health-interval 10s
           --health-timeout 5s
