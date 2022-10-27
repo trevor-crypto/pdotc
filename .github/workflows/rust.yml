@@ -10,23 +10,18 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # Label of the container job
-  runner-job:
-    # Containers must run in Linux based operating systems
+  dryrun-tests:
     runs-on: ubuntu-latest
-
-    # Service containers to run with `runner-job`
     services:
-      # Label used to access the service container
       sidecar:
-        # Docker Hub image
         image: parity/substrate-api-sidecar:latest
         ports:
           # Opens tcp port 8080 on the host and service container
           - 8080:8080
     steps:
-      - run: |
-          curl -s http://0.0.0.0:8080/blocks/head | jq
+      - name: Check sideside
+        run: |
+          curl -s http://localhost:8080/blocks/head | jq
   nightly:
     runs-on: ubuntu-latest
 
