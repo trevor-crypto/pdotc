@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Check sideside
         run: |
-          curl -s http://localhost:8080/blocks/head | jq
+          curl http://localhost:8080/blocks/head | jq
   nightly:
     runs-on: ubuntu-latest
 
