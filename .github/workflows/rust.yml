@@ -15,6 +15,8 @@ jobs:
     services:
       sidecar:
         image: parity/substrate-api-sidecar:latest
+        env:
+          SAS_SUBSTRATE_URL: wss://rpc.polkadot.io
         ports:
           # Opens tcp port 8080 on the host and service container
           - 8080:8080
