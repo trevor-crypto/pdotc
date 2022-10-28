@@ -28,9 +28,9 @@ jobs:
     steps:
       - run: |
           waitport() {
-              while ! nc -z 127.0.0.1 $1 ; do sleep 1 ; done
+              while ! nc -z 127.0.0.1 8080 ; do sleep 1 ; done
           }
-          waitport("8080")
+          waitport()
 
           curl http://127.0.0.1:8080/blocks/head | jq
   nightly:
