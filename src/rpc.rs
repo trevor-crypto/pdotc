@@ -133,6 +133,10 @@ pub fn author_submit_extrinsic_with_id(xt_hex_prefixed: &str, id: u32) -> Value 
     json_req("author_submitExtrinsic", vec![xt_hex_prefixed], id)
 }
 
+pub fn system_dry_run(xt_hex_prefixed: &str, id: u32) -> Value {
+    json_req("system_dryRun", vec![xt_hex_prefixed], id)
+}
+
 fn json_req<S: Serialize>(method: &str, params: S, id: u32) -> Value {
     json!({
         "method": method,

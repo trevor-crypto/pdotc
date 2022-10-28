@@ -4,7 +4,7 @@ use pdotc::blake2_256;
 use pdotc::client::{ClientError, Result, Signer};
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
-use serde_json::Value;
+use serde_json::{json, Value};
 
 mod kusama;
 mod polkadot;
@@ -15,6 +15,7 @@ const SEED_1: &str = "9d90b79e257eeb651e0f6759d14c35e5091161f97b079d6a7ca3645067
 
 pub struct PDotClient<HttpClient> {
     url: String,
+    sidecar_url: String,
     inner: HttpClient,
 }
 
@@ -87,6 +88,7 @@ impl PDotClient<ureq::Agent> {
         Self {
             inner: ureq::agent(),
             url: "https://rpc.polkadot.io".to_string(),
+            sidecar_url: "127.0.0.1:8080".to_string(),
         }
     }
 
@@ -94,6 +96,7 @@ impl PDotClient<ureq::Agent> {
         Self {
             inner: ureq::agent(),
             url: "https://westend-rpc.polkadot.io".to_string(),
+            sidecar_url: "127.0.0.1:8081".to_string(),
         }
     }
 
@@ -101,7 +104,19 @@ impl PDotClient<ureq::Agent> {
         Self {
             inner: ureq::agent(),
             url: "https://kusama-rpc.polkadot.io".to_string(),
+            sidecar_url: "127.0.0.1:8082".to_string(),
         }
+    }
+
+    pub fn sidecar_dry_run(&self, xt: String) -> Result<(), Box<dyn std::error::Error>> {
+        let url = format!("{}/transaction/dry-run", self.sidecar_url);
+        let res = self
+            .inner
+            .post(&url)
+            .send_json(json!({ "tx": xt }))?
+            .into_json::<Value>()?;
+        println!("{res}");
+        Ok(())
     }
 }
 
@@ -120,6 +135,15 @@ macro_rules! validate_xt {
             fn  [<test_ $call _fee>]() {
                 let xt = $crate::xt::$call(&API, $($args)*).as_hex();
                 let res = API.fee_details(&xt, None);
+                dbg!(&res);
+                assert!(res.is_ok());
+            }
+
+            #[test]
+            #[ignore = "requires sidecar running"]
+            fn  [<test_ $call _dry_run>]() {
+                let xt = $crate::xt::$call(&API, $($args)*).as_hex();
+                let res = client().sidecar_dry_run(xt);
                 dbg!(&res);
                 assert!(res.is_ok());
             }

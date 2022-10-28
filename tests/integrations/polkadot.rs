@@ -9,11 +9,12 @@ use crate::{validate_xt, KeyStore, PDotClient};
 
 static CLIENT: OnceLock<PDotClient<Agent>> = OnceLock::new();
 
-static API: LazyLock<Api<KeyStore, PDotClient<Agent>, Polkadot>> = LazyLock::new(|| {
-    let client = CLIENT.get_or_init(PDotClient::dot);
-    ApiBuilder::polkadot(client).build().unwrap()
-});
+static API: LazyLock<Api<KeyStore, PDotClient<Agent>, Polkadot>> =
+    LazyLock::new(|| ApiBuilder::polkadot(client()).build().unwrap());
 
+fn client() -> &'static PDotClient<Agent> {
+    CLIENT.get_or_init(PDotClient::dot)
+}
 validate_xt!(staking_rebond(), "0x0713a10f");
 validate_xt!(staking_bond_extra(), "0x0701a10f");
 validate_xt!(staking_unbond(), "0x0702a10f");

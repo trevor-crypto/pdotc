@@ -8,7 +8,7 @@ use crate::network::{Kusama, Polkadot, SubstrateNetwork, Westend};
 use crate::pallets::storage::storage_key_account_balance;
 use crate::rpc::{
     chain_get_block, chain_get_block_hash, chain_get_genesis_hash, payment_query_fee_details,
-    state_get_runtime_version, state_get_storage, JsonRpcError, RpcClient,
+    state_get_runtime_version, state_get_storage, system_dry_run, JsonRpcError, RpcClient,
 };
 use crate::utils::FromHexString;
 use crate::{
@@ -191,5 +191,12 @@ impl<'c, S, C: RpcClient, N: SubstrateNetwork> Api<'c, S, C, N> {
         let fees = self.client.post(jsonreq)?.into_result()?;
 
         Ok(fees)
+    }
+
+    /// Submit a dry run to the RPC node.
+    /// Returns an error if the dry run functionality is not supported.
+    pub fn dry_run(&self, xt: &str) -> Result<String> {
+        let json = system_dry_run(xt, 1);
+        self.client.post(json)?.into_result()
     }
 }
