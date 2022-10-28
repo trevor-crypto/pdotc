@@ -37,9 +37,9 @@ jobs:
       - name: Wait for Sidecar to be available
         run: |
           waitport() {
-              while ! curl --fail --output /dev/null 127.0.0.1:8080 ; do sleep 1 ; done
-              while ! curl --fail --output /dev/null 127.0.0.1:8081 ; do sleep 1 ; done
-              while ! curl --fail --output /dev/null 127.0.0.1:8082 ; do sleep 1 ; done
+              while ! curl --fail --output 127.0.0.1:8080 ; do sleep 1 ; done
+              while ! curl --fail --output 127.0.0.1:8081 ; do sleep 1 ; done
+              while ! curl --fail --output 127.0.0.1:8082 ; do sleep 1 ; done
           }
           waitport
       - uses: actions/checkout@v2

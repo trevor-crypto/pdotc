@@ -108,15 +108,14 @@ impl PDotClient<ureq::Agent> {
         }
     }
 
-    pub fn sidecar_dry_run(&self, xt: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn sidecar_dry_run(&self, xt: String) -> Result<Value, Box<dyn std::error::Error>> {
         let url = format!("{}/transaction/dry-run", self.sidecar_url);
         let res = self
             .inner
             .post(&url)
             .send_json(json!({ "tx": xt }))?
             .into_json::<Value>()?;
-        println!("{res}");
-        Ok(())
+        Ok(res)
     }
 }
 
