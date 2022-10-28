@@ -15,17 +15,23 @@ jobs:
     services:
       sidecar:
         image: parity/substrate-api-sidecar:latest
+        env:
+          SAS_SUBSTRATE_URL: wss://rpc.polkadot.io
         ports:
           # Opens tcp port 8080 on the host and service container
           - 8080:8080
-        options: >-
-          --health-cmd "curl http://127.0.0.1:8080/blocks/head"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+#         options: >-
+#           --health-cmd "curl http://127.0.0.1:8080/blocks/head"
+#           --health-interval 10s
+#           --health-timeout 5s
+#           --health-retries 5
     steps:
-      - run: |
-          curl http://127.0.0.1:8080/blocks/head | jq
+      - name: Wait for Sidecar to be available
+        run: |
+          waitport() {
+              while ! curl --fail --output /dev/null 127.0.0.1:8080 ; do sleep 1 ; done
+          }
+          waitport
   nightly:
     runs-on: ubuntu-latest
 
