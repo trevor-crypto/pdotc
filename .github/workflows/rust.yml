@@ -42,6 +42,14 @@ jobs:
               while ! curl --fail --output /dev/null 127.0.0.1:8082 ; do sleep 1 ; done
           }
           waitport
+      - uses: actions/checkout@v2
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+      - name: Run Integration Dryrun tests
+        run: cargo test -- --test-threads=1 --ignored
   nightly:
     runs-on: ubuntu-latest
     needs: sidecars
@@ -61,7 +69,7 @@ jobs:
       - name: Build
         run: cargo build --verbose
       - name: Run tests
-        run: cargo test -- --test-threads=1 --ignored
+        run: cargo test -- --test-threads=1
   stable:
     runs-on: ubuntu-latest
     steps:
