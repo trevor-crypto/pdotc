@@ -88,7 +88,7 @@ impl PDotClient<ureq::Agent> {
         Self {
             inner: ureq::agent(),
             url: "https://rpc.polkadot.io".to_string(),
-            sidecar_url: "127.0.0.1:8080".to_string(),
+            sidecar_url: "http://127.0.0.1:8080".to_string(),
         }
     }
 
@@ -96,7 +96,7 @@ impl PDotClient<ureq::Agent> {
         Self {
             inner: ureq::agent(),
             url: "https://westend-rpc.polkadot.io".to_string(),
-            sidecar_url: "127.0.0.1:8081".to_string(),
+            sidecar_url: "http://127.0.0.1:8081".to_string(),
         }
     }
 
@@ -104,7 +104,7 @@ impl PDotClient<ureq::Agent> {
         Self {
             inner: ureq::agent(),
             url: "https://kusama-rpc.polkadot.io".to_string(),
-            sidecar_url: "127.0.0.1:8082".to_string(),
+            sidecar_url: "http://127.0.0.1:8082".to_string(),
         }
     }
 
