@@ -30,7 +30,7 @@ jobs:
           waitport() {
               while ! nc -z 127.0.0.1 $1 ; do sleep 1 ; done
           }
-          waitport(8080)
+          waitport("8080")
 
           curl http://127.0.0.1:8080/blocks/head | jq
   nightly:
