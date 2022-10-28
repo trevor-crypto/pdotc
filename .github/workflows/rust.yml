@@ -26,13 +26,12 @@ jobs:
 #           --health-timeout 5s
 #           --health-retries 5
     steps:
-      - run: |
+      - name: Wait for Sidecar to be available
+        run: |
           waitport() {
-              while ! curl --fail --silent --output /dev/null 127.0.0.1:8080 ; do sleep 1 ; done
+              while ! curl --fail --output /dev/null 127.0.0.1:8080 ; do sleep 1 ; done
           }
           waitport
-
-          curl http://127.0.0.1:8080/blocks/head | jq
   nightly:
     runs-on: ubuntu-latest
 
