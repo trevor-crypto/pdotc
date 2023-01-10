@@ -49,7 +49,7 @@ impl Signer for KeyStore {
         let message = Message::from_slice(&digest)?;
 
         let (rec_id, compact) = secp
-            .sign_recoverable(&message, &self.key)
+            .sign_ecdsa_recoverable(&message, &self.key)
             .serialize_compact();
         let mut sig = [0; 65];
         sig[0..64].copy_from_slice(&compact);
