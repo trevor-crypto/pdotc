@@ -147,6 +147,7 @@ impl<S: Signer, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ss58::Ss58Codec;
 
     #[test]
     fn proxy_type_encode() {
@@ -161,7 +162,7 @@ mod tests {
         let expected = (
             vec![
                 ProxyDefinition {
-                    delegate: AccountId32::from_str(
+                    delegate: AccountId32::from_ss58check(
                         "5D4YdVdApsU3Y4Qf5kCbKgFEtPKLMqoQQHcA2U45XYxwkMR6",
                     )
                     .unwrap(),
@@ -169,7 +170,7 @@ mod tests {
                     delay: 0u32,
                 },
                 ProxyDefinition {
-                    delegate: AccountId32::from_str(
+                    delegate: AccountId32::from_ss58check(
                         "5FTbktpmgu4oi2Nhn2qY8QuPyoJY3CDzpYFeqRcte5fZ5Yby",
                     )
                     .unwrap(),
@@ -177,7 +178,7 @@ mod tests {
                     delay: 0u32,
                 },
                 ProxyDefinition {
-                    delegate: AccountId32::from_str(
+                    delegate: AccountId32::from_ss58check(
                         "5FsrYox6CGyZ7rovGAmn17mJyHXf8QFN82KoGYWz6eHnRRXW",
                     )
                     .unwrap(),

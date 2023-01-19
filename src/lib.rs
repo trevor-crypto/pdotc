@@ -2,17 +2,19 @@ use std::str::FromStr;
 
 use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
-pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58AddressFormatRegistry, Ss58Codec};
+pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58AddressFormatRegistry};
 pub use sp_core::ecdsa::{Public, Signature};
 pub use sp_core::{blake2_256, H256};
 
 use crate::pallets::timestamp::decode_timestamp;
+use crate::ss58::Ss58Codec;
 use crate::utils::deser_number_or_hex;
 
 pub mod client;
 pub mod network;
 pub mod pallets;
 pub mod rpc;
+pub mod ss58;
 mod utils;
 
 pub type GenericAddress = MultiAddress<AccountId32, ()>;

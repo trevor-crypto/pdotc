@@ -16,7 +16,7 @@ impl FromHexString for Vec<u8> {
             .trim_start_matches("0x")
             .to_string();
 
-        hex::decode(&hexstr)
+        hex::decode(hexstr)
     }
 }
 

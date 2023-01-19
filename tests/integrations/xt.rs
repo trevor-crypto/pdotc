@@ -10,7 +10,8 @@ use pdotc::pallets::staking::{
     ComposedStakingWithdrawUnbonded, RewardDestination,
 };
 use pdotc::rpc::RpcClient;
-use pdotc::{AccountId32, MultiAddress, Ss58Codec, UncheckedExtrinsic};
+use pdotc::ss58::Ss58Codec;
+use pdotc::{AccountId32, MultiAddress, UncheckedExtrinsic};
 
 pub fn balance_transfer<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,

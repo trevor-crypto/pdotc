@@ -19,9 +19,10 @@ pub(crate) fn storage_proxy_proxies(account: &[u8]) -> StorageKey {
 
 #[cfg(test)]
 mod tests {
-    use sp_core::crypto::{AccountId32, Ss58Codec};
+    use sp_core::crypto::AccountId32;
 
     use super::*;
+    use crate::ss58::Ss58Codec;
 
     fn check(f: fn(&[u8]) -> StorageKey, expected: &str) {
         let got = f(AccountId32::from_ss58check_with_version(

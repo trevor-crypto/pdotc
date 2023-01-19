@@ -4,8 +4,8 @@ use parity_scale_codec::Decode;
 pub use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, to_value, Value};
-use sp_core::storage::StorageKey;
 use sp_core::H256;
+use sp_storage::StorageKey;
 
 use crate::client::{ClientError, Result};
 use crate::utils::FromHexString;
@@ -106,7 +106,7 @@ pub fn state_get_runtime_version_with_id(id: u32) -> Value {
     json_req("state_getRuntimeVersion", vec![Value::Null], id)
 }
 
-pub fn state_get_storage(key: StorageKey, at_block: Option<H256>) -> Value {
+pub(crate) fn state_get_storage(key: StorageKey, at_block: Option<H256>) -> Value {
     json_req(
         "state_getStorage",
         vec![to_value(key).unwrap(), to_value(at_block).unwrap()],
