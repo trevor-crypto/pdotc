@@ -17,10 +17,34 @@ pub(crate) type CallIndex = [u8; 2];
 impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     /// Creates and signs an extrinsic that can be submitted to a node
     pub fn create_xt<C: Encode + Clone>(&self, call: C) -> Result<UncheckedExtrinsic<C>> {
+        self._create_xt(call, None)
+    }
+
+    /// Creates and signs an extrinsic that can be submitted to a node
+    /// with a given nonce
+    pub fn create_xt_with_nonce<C: Encode + Clone>(
+        &self,
+        call: C,
+        nonce: u32,
+    ) -> Result<UncheckedExtrinsic<C>> {
+        self._create_xt(call, Some(nonce))
+    }
+
+    /// Creates and signs an extrinsic that can be submitted to a node
+    fn _create_xt<C: Encode + Clone>(
+        &self,
+        call: C,
+        nonce: Option<u32>,
+    ) -> Result<UncheckedExtrinsic<C>> {
         let signature = if let Some(signer) = &self.signer {
             let gen_hash = self.genesis_hash;
             let runtime_version = self.runtime_version;
-            let extra = GenericExtra::new(Era::Immortal, self.nonce().unwrap_or_default());
+            let nonce = if let Some(nonce) = nonce {
+                nonce
+            } else {
+                self.nonce()?
+            };
+            let extra = GenericExtra::new(Era::Immortal, nonce);
             let s_extra = (
                 runtime_version.spec_version,
                 runtime_version.transaction_version,
@@ -44,7 +68,6 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
             function: call,
         })
     }
-
     pub fn signer_account(&self) -> Result<AccountId32> {
         match &self.signer {
             Some(signer) => Ok(public_into_account(signer.public()?)),
