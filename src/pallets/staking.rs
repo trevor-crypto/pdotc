@@ -35,6 +35,7 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
         controller: GenericAddress,
         amount: Balance,
         payee: RewardDestination<GenericAddress>,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingBond>> {
         let call = (
             [N::STAKING_PALLET_IDX, N::STAKING_BOND],
@@ -42,67 +43,76 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
             Compact(amount),
             payee,
         );
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 
     pub fn staking_bond_extra(
         &self,
         amount: Balance,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingBondExtra>> {
         let call = (
             [N::STAKING_PALLET_IDX, N::STAKING_BOND_EXTRA],
             Compact(amount),
         );
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 
     pub fn staking_unbond(
         &self,
         amount: Balance,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingUnbond>> {
         let call = ([N::STAKING_PALLET_IDX, N::STAKING_UNBOND], Compact(amount));
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 
     pub fn staking_withdraw_unbonded(
         &self,
         num_slashing_spans: u32,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingWithdrawUnbonded>> {
         let call = (
             [N::STAKING_PALLET_IDX, N::STAKING_WITHDRAW_UNBONDED],
             num_slashing_spans,
         );
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 
     pub fn staking_nominate(
         &self,
         targets: Vec<GenericAddress>,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingNominate>> {
         let call = ([N::STAKING_PALLET_IDX, N::STAKING_NOMINATE], targets);
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 
-    pub fn staking_chill(&self) -> Result<UncheckedExtrinsic<ComposedStakingChill>> {
-        self.create_xt([N::STAKING_PALLET_IDX, N::STAKING_CHILL])
+    pub fn staking_chill(
+        &self,
+        nonce: Option<u32>,
+    ) -> Result<UncheckedExtrinsic<ComposedStakingChill>> {
+        self._create_xt([N::STAKING_PALLET_IDX, N::STAKING_CHILL], nonce)
     }
 
     pub fn staking_set_controller(
         &self,
         controller: GenericAddress,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingSetController>> {
         let call = (
             [N::STAKING_PALLET_IDX, N::STAKING_SET_CONTROLLER],
             controller,
         );
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 
     pub fn staking_rebond(
         &self,
         amount: Balance,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingRebond>> {
         let call = ([N::STAKING_PALLET_IDX, N::STAKING_REBOND], Compact(amount));
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 }

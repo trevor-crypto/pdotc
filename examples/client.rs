@@ -117,6 +117,7 @@ fn main() {
                 .0,
             ),
             1000,
+            None,
         )
         .expect("Created xt");
     let xt_hex = xt.as_hex();
@@ -149,13 +150,14 @@ fn main() {
             ),
             1000,
             RewardDestination::Stash,
+            None,
         )
         .expect("Created xt")
         .as_hex();
     dbg!(&bond_xt_hex);
 
     // staking unbond
-    let unbond_xt_hex = api.staking_unbond(1000).expect("Created xt").as_hex();
+    let unbond_xt_hex = api.staking_unbond(1000, None).expect("Created xt").as_hex();
     dbg!(&unbond_xt_hex);
 
     // send out the transfer xt
@@ -182,6 +184,7 @@ fn main() {
                 .0,
             ),
             1000,
+            None,
         )
         .expect("Created xt");
     let xt_hex = xt.as_hex();
@@ -202,6 +205,7 @@ fn main() {
             ),
             1000,
             RewardDestination::Stash,
+            None,
         )
         .expect("Created xt")
         .as_hex();

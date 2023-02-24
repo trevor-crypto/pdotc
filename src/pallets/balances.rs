@@ -13,12 +13,13 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
         &self,
         to: GenericAddress,
         amount: Balance,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedTransfer>> {
         let call = (
             [N::BALANCE_PALLET_IDX, N::BALANCE_TRANSFER],
             to,
             Compact(amount),
         );
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 }

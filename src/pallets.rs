@@ -31,7 +31,7 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     }
 
     /// Creates and signs an extrinsic that can be submitted to a node
-    fn _create_xt<C: Encode + Clone>(
+    pub(crate) fn _create_xt<C: Encode + Clone>(
         &self,
         call: C,
         nonce: Option<u32>,

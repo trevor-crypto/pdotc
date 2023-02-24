@@ -81,6 +81,13 @@ impl<'c> ApiBuilder {
             network: PhantomData,
         }
     }
+
+    pub fn builder<C: RpcClient, N: SubstrateNetwork>(client: &'c C) -> ApiBuilderWithClient<C, N> {
+        ApiBuilderWithClient {
+            client,
+            network: PhantomData,
+        }
+    }
 }
 
 pub struct ApiBuilderWithClient<'c, C: RpcClient, N: SubstrateNetwork> {

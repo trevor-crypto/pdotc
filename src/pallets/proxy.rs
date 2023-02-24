@@ -93,6 +93,7 @@ impl<S: Signer, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
         delegate: N::ProxyDelegateType,
         proxy_type: N::ProxyTypeType,
         delay: u32,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<(CallIndex, N::ProxyDelegateType, N::ProxyTypeType, u32)>> {
         let call = (
             [N::PROXY_PALLET_IDX, N::PROXY_ADD_PROXY],
@@ -100,7 +101,7 @@ impl<S: Signer, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
             proxy_type,
             delay,
         );
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 
     /// Register a proxy account for the sender that is able to make calls on
@@ -113,6 +114,7 @@ impl<S: Signer, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
         delegate: N::ProxyDelegateType,
         proxy_type: N::ProxyTypeType,
         delay: u32,
+        nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<(CallIndex, N::ProxyDelegateType, N::ProxyTypeType, u32)>> {
         let call = (
             [N::PROXY_PALLET_IDX, N::PROXY_REMOVE_PROXY],
@@ -120,12 +122,15 @@ impl<S: Signer, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
             proxy_type,
             delay,
         );
-        self.create_xt(call)
+        self._create_xt(call, nonce)
     }
 
     /// Unregister all proxy accounts for the sender.
-    pub fn remove_proxies(&self) -> Result<UncheckedExtrinsic<ComposedProxyRemoveProxies>> {
-        self.create_xt([N::PROXY_PALLET_IDX, N::PROXY_REMOVE_PROXIES])
+    pub fn remove_proxies(
+        &self,
+        nonce: Option<u32>,
+    ) -> Result<UncheckedExtrinsic<ComposedProxyRemoveProxies>> {
+        self._create_xt([N::PROXY_PALLET_IDX, N::PROXY_REMOVE_PROXIES], nonce)
     }
 
     /// Returns proxies set for current account.
