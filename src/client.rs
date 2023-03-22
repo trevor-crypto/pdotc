@@ -39,12 +39,16 @@ pub enum ClientError {
     SignerAccountDoesNotExist,
     #[error(transparent)]
     Other(#[from] StdError),
+    #[error("Invalid signature size")]
+    InvalidSignatureSize,
 }
 
 /// A trait to implement on a keystore that can produce an ECDSA signature
-pub trait Signer {
+pub trait Signer<'a> {
+    type Signature: Into<MultiSignature> + TryFrom<&'a [u8], Error = ()>;
+
     /// Returns a 33 byte ECDSA public key
-    fn _public(&self) -> std::result::Result<[u8; 33], StdError>;
+    fn _public<const N: usize>(&self) -> std::result::Result<[u8; N], StdError>;
 
     /// Returns a 65 byte compressed ECDSA signature
     fn _sign(&self, message: &[u8]) -> std::result::Result<[u8; 65], StdError>;
@@ -53,8 +57,10 @@ pub trait Signer {
         Ok(Public(self._public()?))
     }
 
-    fn sign(&self, message: &[u8]) -> Result<MultiSignature> {
-        Ok(MultiSignature::Ecdsa(Signature(self._sign(message)?)))
+    fn sign(&self, message: &'a [u8]) -> Result<MultiSignature> {
+        let sig: std::result::Result<Self::Signature, _> = message.try_into();
+        let sig: Self::Signature = sig.map_err(|_| ClientError::InvalidSignatureSize)?;
+        Ok(sig.into())
     }
 }
 

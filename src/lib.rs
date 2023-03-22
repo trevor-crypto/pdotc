@@ -4,6 +4,7 @@ use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
 pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58AddressFormatRegistry};
 pub use sp_core::ecdsa::{Public, Signature};
+pub use sp_core::ed25519::Signature as Ed25519Sig;
 pub use sp_core::{blake2_256, H256};
 
 use crate::pallets::timestamp::decode_timestamp;
@@ -65,9 +66,24 @@ pub fn public_into_account(p: Public) -> AccountId32 {
 
 #[derive(Clone, Debug, Decode, Encode, PartialEq, Eq)]
 pub enum MultiSignature {
+    /// An Ed25519 signature.
+    #[codec(index = 0)]
+    Ed25519(Ed25519Sig),
     /// An ECDSA/SECP256k1 signature.
     #[codec(index = 2)]
     Ecdsa(Signature),
+}
+
+impl From<Signature> for MultiSignature {
+    fn from(value: Signature) -> Self {
+        MultiSignature::Ecdsa(value)
+    }
+}
+
+impl From<Ed25519Sig> for MultiSignature {
+    fn from(value: Ed25519Sig) -> Self {
+        MultiSignature::Ed25519(value)
+    }
 }
 
 /// runtime spec verion, transaction version, genesis hash, genesis hash or

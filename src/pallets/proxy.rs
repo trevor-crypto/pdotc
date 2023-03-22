@@ -82,7 +82,7 @@ pub struct ProxyDefinition<AccountId, ProxyType, BlockNumber> {
 }
 
 #[allow(clippy::type_complexity)]
-impl<S: Signer, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
+impl<S: for<'a> Signer<'a>, C: RpcClient, N: SubstrateNetwork> Api<'_, S, C, N> {
     /// Register a proxy account for the sender that is able to make calls on
     /// its behalf.
     ///

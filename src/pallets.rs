@@ -14,7 +14,7 @@ pub mod timestamp;
 
 pub(crate) type CallIndex = [u8; 2];
 
-impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
+impl<S: for<'a> Signer<'a>, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     /// Creates and signs an extrinsic that can be submitted to a node
     pub fn create_xt<C: Encode + Clone>(&self, call: C) -> Result<UncheckedExtrinsic<C>> {
         self._create_xt(call, None)
