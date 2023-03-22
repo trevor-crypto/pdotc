@@ -60,6 +60,7 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
             let sig = raw_payload.encoded(|payload| signer.sign(payload))?;
             Some((from, sig, extra))
         } else {
+            println!("NONE");
             None
         };
 
@@ -77,6 +78,7 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
 
     pub fn nonce(&self) -> Result<u32> {
         let acct = self.signer_account()?;
+        println!("Account: {acct:?}");
         let info = self
             .account_info(acct, None)?
             .ok_or(ClientError::SignerAccountDoesNotExist)?;

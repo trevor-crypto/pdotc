@@ -4,7 +4,7 @@ use sp_core::crypto::AccountId32;
 use sp_core::ecdsa::Public;
 pub use sp_core::ecdsa::Signature;
 
-use crate::network::{Kusama, Polkadot, SubstrateNetwork, Westend};
+use crate::network::{Kusama, Polkadot, Polymesh, SubstrateNetwork, Westend};
 use crate::pallets::storage::storage_key_account_balance;
 use crate::rpc::{
     chain_get_block, chain_get_block_hash, chain_get_genesis_hash, payment_query_fee_details,
@@ -82,6 +82,13 @@ impl<'c> ApiBuilder {
         }
     }
 
+    pub fn polymesh<C: RpcClient>(client: &'c C) -> ApiBuilderWithClient<'c, C, Polymesh> {
+        ApiBuilderWithClient {
+            client,
+            network: PhantomData,
+        }
+    }
+
     pub fn builder<C: RpcClient, N: SubstrateNetwork>(client: &'c C) -> ApiBuilderWithClient<C, N> {
         ApiBuilderWithClient {
             client,
@@ -148,7 +155,7 @@ fn runtime_version<C: RpcClient>(client: &C) -> Result<RuntimeVersion> {
 pub struct Api<'c, S, C: RpcClient, Network: SubstrateNetwork> {
     pub(crate) genesis_hash: H256,
     pub(crate) runtime_version: RuntimeVersion,
-    pub(crate) signer: Option<S>,
+    pub signer: Option<S>,
     pub(crate) client: &'c C,
     network: PhantomData<Network>,
 }
