@@ -29,7 +29,7 @@ pub enum RewardDestination<Account> {
     None,
 }
 
-impl<S: for<'a> Signer<'a>, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
+impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     pub fn staking_bond(
         &self,
         controller: GenericAddress,

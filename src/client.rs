@@ -1,7 +1,7 @@
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
-use sp_core::crypto::AccountId32;
-use sp_core::ecdsa::Public;
+use sp_core::crypto::{AccountId32, UncheckedFrom};
 pub use sp_core::ecdsa::Signature;
 
 use crate::network::{Kusama, Polkadot, Polymesh, SubstrateNetwork, Westend};
@@ -12,8 +12,7 @@ use crate::rpc::{
 };
 use crate::utils::FromHexString;
 use crate::{
-    public_into_account, AccountData, AccountInfo, FeeDetails, MultiSignature, RuntimeVersion,
-    SignedBlock, H256,
+    AccountData, AccountInfo, FeeDetails, MultiSignature, RuntimeVersion, SignedBlock, H256,
 };
 
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
@@ -44,55 +43,28 @@ pub enum ClientError {
     InvalidSignatureSize,
 }
 
-enum PublicKey {
-    Ecdsa(Public),
-    Ed25519(ed25519_dalek::PublicKey),
-}
+/// A trait to implement on a keystore that can produce a signature
+pub trait Signer {
+    type PubBytes: Debug;
+    type SigBytes: Debug;
+    type Pub: Into<AccountId32> + UncheckedFrom<Self::PubBytes>;
+    type Signature: Into<MultiSignature> + UncheckedFrom<Self::SigBytes>;
 
-impl From<Vec<u8>> for PublicKey {
-    fn from(bytes: Vec<u8>) -> Self {
-        match bytes.len() {
-            32 => {
-                PublicKey::Ed25519(ed25519_dalek::PublicKey::from_bytes(bytes.as_slice()).unwrap())
-            }
-            33 => {
-                let bytes = bytes.into_boxed_slice();
-                let boxed: Box<[u8; 33]> = match bytes.try_into() {
-                    Ok(ba) => ba,
-                    Err(e) => panic!("Expected a len of 33 but got {}", e.len()),
-                };
-                PublicKey::Ecdsa(Public::from_raw(*boxed))
-            }
-            x => panic!("Public key with length of {x} not supported"),
-        }
-    }
-}
+    /// Returns a N byte ECDSA public key
+    fn _public(&self) -> std::result::Result<Self::PubBytes, StdError>;
 
-/// A trait to implement on a keystore that can produce an ECDSA signature
-pub trait Signer<'a> {
-    type Signature: Into<MultiSignature> + TryFrom<&'a [u8], Error = ()>;
+    /// Returns a N byte compressed ECDSA signature
+    fn _sign(&self, message: &[u8]) -> std::result::Result<Self::SigBytes, StdError>;
 
-    /// Returns a N byte public key
-    fn _public(&self) -> std::result::Result<Vec<u8>, StdError>;
-
-    /// Returns a N byte compressed signature
-    fn _sign<const N: usize>(&self, message: &[u8]) -> std::result::Result<[u8; N], StdError>;
-
-    fn account_id(&self) -> Result<AccountId32> {
-        let public: PublicKey = self._public()?.into();
-        match public {
-            PublicKey::Ecdsa(key) => Ok(public_into_account(key)),
-            PublicKey::Ed25519(key) => {
-                let key = sp_core::ed25519::Public::from_raw(*key.as_bytes());
-                Ok(key.into())
-            }
-        }
+    fn public(&self) -> Result<AccountId32> {
+        let pub_bytes = self._public().unwrap();
+        let pub_key: Self::Pub = Self::Pub::unchecked_from(pub_bytes);
+        Ok(pub_key.into())
     }
 
-    fn sign(&self, message: &'a [u8]) -> Result<MultiSignature> {
-        println!("LEN {}", message.len());
-        let sig: std::result::Result<Self::Signature, _> = message.try_into();
-        let sig: Self::Signature = sig.map_err(|_| ClientError::InvalidSignatureSize)?;
+    fn sign(&self, message: &[u8]) -> Result<MultiSignature> {
+        let sig_bytes = self._sign(message).unwrap();
+        let sig: Self::Signature = Self::Signature::unchecked_from(sig_bytes);
         Ok(sig.into())
     }
 }

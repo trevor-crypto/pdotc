@@ -8,7 +8,7 @@ use crate::{Balance, GenericAddress, UncheckedExtrinsic};
 
 pub type ComposedTransfer = (CallIndex, GenericAddress, Compact<Balance>);
 
-impl<S: for<'a> Signer<'a>, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
+impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     pub fn balance_transfer(
         &self,
         to: GenericAddress,

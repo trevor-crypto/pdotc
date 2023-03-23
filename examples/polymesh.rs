@@ -1,5 +1,8 @@
 #![allow(unused)]
-use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer as SignerTrait};
+use blake2::{Blake2b, Blake2b512, Digest as _};
+use ed25519_dalek::{
+    Digest, Keypair, PublicKey, SecretKey, Sha512, Signature, Signer as SignerTrait,
+};
 use parity_scale_codec::Decode;
 use pdotc::client::{ApiBuilder, ClientError, Result, Signer};
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
@@ -11,6 +14,7 @@ use pdotc::{
 use secp256k1::{Message, Secp256k1};
 use serde_json::Value;
 use sp_core::crypto::AccountId32;
+use sp_core::hashing::blake2_512;
 use sp_core::sr25519::{self, Pair};
 use sp_core::Pair as TraitPair;
 
@@ -29,8 +33,7 @@ const MNEMONIC_1: &str = "foam trim elegant fragile wise blade cause have chef e
 const SEED_5: &str = "1d8820192af963f513a5f326d14af854c96779c0455324ac5052b9be81863442";
 // Polymesh address: 5HSUdXTJ3xFEkFpiiGoHw36zrSrfTWHiu52qj8WqMotsrLRW
 const SEED_6: &str = "d234cf221ddb00f6944d5d0f97836b2dcddb319e0e3bd88f51a321360215395e";
-// const PUB_KEY: &str =
-// "edc80a9c95a0eb72cf9f4f0f1a053e594aad7a96673ca5693ee5a626866b43fb";
+const PUB_KEY: &str = "edc80a9c95a0eb72cf9f4f0f1a053e594aad7a96673ca5693ee5a626866b43fb";
 
 struct PDotClient<HttpClient> {
     url: String,
@@ -61,65 +64,32 @@ impl Default for KeyStore {
     }
 }
 
-impl<'a> Signer<'a> for KeyStore {
+impl Signer for KeyStore {
+    type SigBytes = [u8; 64];
+    type PubBytes = [u8; 32];
     type Signature = Ed25519Sig;
+    type Pub = sp_core::ed25519::Public;
 
     fn _public(
         &self,
-    ) -> std::result::Result<Vec<u8>, Box<(dyn std::error::Error + Send + Sync + 'static)>> {
-        let pubkey = self.key.public.as_bytes().to_vec();
-        // let pubkey = self.key.public.as_bytes().to_vec().into_boxed_slice();
-        // let boxed: Box<[u8; N]> = match pubkey.try_into() {
-        //     Ok(ba) => ba,
-        //     Err(e) => panic!("Expected a len of {N} but got {}", e.len()),
-        // };
-
-        Ok(pubkey)
+    ) -> std::result::Result<Self::PubBytes, Box<(dyn std::error::Error + Send + Sync + 'static)>>
+    {
+        let pub_bytes = self.key.public.as_bytes();
+        Ok(*pub_bytes)
     }
 
-    fn _sign<const N: usize>(
+    fn _sign(
         &self,
         message: &[u8],
-    ) -> std::result::Result<[u8; N], Box<(dyn std::error::Error + Send + Sync + 'static)>> {
-        let signature = self.key.sign(message);
+    ) -> std::result::Result<Self::SigBytes, Box<(dyn std::error::Error + Send + Sync + 'static)>>
+    {
+        let mut prehashed = Sha512::new();
+        prehashed.update(message);
+        let signature = self.key.sign_prehashed(prehashed, None)?;
         assert!(self.key.verify(message, &signature).is_ok());
-        let boxed = signature.as_ref().to_vec().into_boxed_slice();
-        let boxed: Box<[u8; N]> = match boxed.try_into() {
-            Ok(ba) => ba,
-            Err(e) => panic!("Expected a len of {N} but got {}", e.len()),
-        };
-
-        Ok(*boxed)
+        Ok(signature.into())
     }
 }
-
-// impl Signer for KeyStore {
-//     fn _public(
-//         &self,
-//     ) -> std::result::Result<[u8; 33], Box<(dyn std::error::Error + Send +
-// Sync + 'static)>> {         let secp = Secp256k1::new();
-//         let pubkey = self.key.public_key(&secp);
-//         Ok(pubkey.serialize())
-//     }
-
-//     fn _sign(
-//         &self,
-//         message: &[u8],
-//     ) -> std::result::Result<[u8; 65], Box<(dyn std::error::Error + Send +
-// Sync + 'static)>> {         let secp = Secp256k1::signing_only();
-//         let digest = blake2_256(message);
-
-//         let message = Message::from_slice(&digest)?;
-
-//         let (rec_id, compact) = secp
-//             .sign_ecdsa_recoverable(&message, &self.key)
-//             .serialize_compact();
-//         let mut sig = [0; 65];
-//         sig[0..64].copy_from_slice(&compact);
-//         sig[64] = rec_id.to_i32() as u8;
-//         Ok(sig)
-//     }
-// }
 
 impl RpcClient for PDotClient<ureq::Agent> {
     fn post(&self, json_req: serde_json::Value) -> Result<JsonRpcResponse> {
@@ -156,17 +126,6 @@ fn main() {
             .unwrap()
             .to_ss58check_with_version(Ss58AddressFormat::custom(42))
     );
-    // println!(
-    //     "Account Info: {:?}",
-    //     api.account_info(
-    //         AccountId32::from_ss58check_with_version(
-    //             "5HSUdXTJ3xFEkFpiiGoHw36zrSrfTWHiu52qj8WqMotsrLRW"
-    //         )
-    //         .unwrap()
-    //         .0,
-    //         None
-    //     )
-    // );
 
     // get balance
     let balance = api
@@ -182,7 +141,7 @@ fn main() {
     let xt = api
         .balance_transfer(
             MultiAddress::Id(
-                AccountId32::from_ss58check("5HSUdXTJ3xFEkFpiiGoHw36zrSrfTWHiu52qj8WqMotsrLRW")
+                AccountId32::from_ss58check("5Ftp4PgyEafycLGWmUNasxJbanrF1kkK6FAvRdHo8J5vDSt8")
                     .unwrap(),
             ),
             10000,
@@ -214,12 +173,12 @@ fn main() {
     //);
 
     // send out the transfer xt
-    // match client.send_extrinsic(&xt_hex) {
-    //     Ok(tx_hash) => {
-    //         dbg!(tx_hash);
-    //     }
-    //     Err(e) => {
-    //         dbg!(e);
-    //     }
-    // }
+    match client.send_extrinsic(&xt_hex) {
+        Ok(tx_hash) => {
+            dbg!(tx_hash);
+        }
+        Err(e) => {
+            dbg!(e);
+        }
+    }
 }

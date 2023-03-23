@@ -14,7 +14,7 @@ pub mod timestamp;
 
 pub(crate) type CallIndex = [u8; 2];
 
-impl<S: for<'a> Signer<'a>, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
+impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     /// Creates and signs an extrinsic that can be submitted to a node
     pub fn create_xt<C: Encode + Clone>(&self, call: C) -> Result<UncheckedExtrinsic<C>> {
         self._create_xt(call, None)
@@ -56,7 +56,7 @@ impl<S: for<'a> Signer<'a>, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, C
             );
             let raw_payload = SignedPayload::new(call.clone(), extra, s_extra);
 
-            let from = signer.account_id()?.into();
+            let from = signer.public()?.into();
             let sig = raw_payload.encoded(|payload| signer.sign(payload))?;
             Some((from, sig, extra))
         } else {
@@ -71,7 +71,7 @@ impl<S: for<'a> Signer<'a>, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, C
 
     pub fn signer_account(&self) -> Result<AccountId32> {
         match &self.signer {
-            Some(signer) => Ok(signer.account_id()?),
+            Some(signer) => Ok(signer.public()?),
             None => Err(ClientError::NoSigner),
         }
     }
