@@ -4,7 +4,7 @@ use sp_core::crypto::AccountId32;
 use crate::client::{Api, ClientError, Result, Signer};
 use crate::network::SubstrateNetwork;
 use crate::rpc::RpcClient;
-use crate::{public_into_account, Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
+use crate::{Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
 
 pub mod balances;
 pub mod proxy;
@@ -56,11 +56,10 @@ impl<S: for<'a> Signer<'a>, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, C
             );
             let raw_payload = SignedPayload::new(call.clone(), extra, s_extra);
 
-            let from = signer.public()?.into();
+            let from = signer.account_id()?.into();
             let sig = raw_payload.encoded(|payload| signer.sign(payload))?;
             Some((from, sig, extra))
         } else {
-            println!("NONE");
             None
         };
 
@@ -69,16 +68,16 @@ impl<S: for<'a> Signer<'a>, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, C
             function: call,
         })
     }
+
     pub fn signer_account(&self) -> Result<AccountId32> {
         match &self.signer {
-            Some(signer) => Ok(public_into_account(signer.public()?)),
+            Some(signer) => Ok(signer.account_id()?),
             None => Err(ClientError::NoSigner),
         }
     }
 
     pub fn nonce(&self) -> Result<u32> {
         let acct = self.signer_account()?;
-        println!("Account: {acct:?}");
         let info = self
             .account_info(acct, None)?
             .ok_or(ClientError::SignerAccountDoesNotExist)?;
