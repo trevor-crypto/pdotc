@@ -47,19 +47,17 @@ pub enum ClientError {
 pub trait Signer {
     type PubBytes: Debug;
     type SigBytes: Debug;
-    type Pub: Into<AccountId32> + UncheckedFrom<Self::PubBytes>;
+    type Pub: UncheckedFrom<Self::PubBytes>;
     type Signature: Into<MultiSignature> + UncheckedFrom<Self::SigBytes>;
 
-    /// Returns a N byte ECDSA public key
-    fn _public(&self) -> std::result::Result<Self::PubBytes, StdError>;
+    /// Returns a public key
+    fn _public(&self) -> std::result::Result<AccountId32, StdError>;
 
     /// Returns a N byte compressed ECDSA signature
     fn _sign(&self, message: &[u8]) -> std::result::Result<Self::SigBytes, StdError>;
 
     fn public(&self) -> Result<AccountId32> {
-        let pub_bytes = self._public().unwrap();
-        let pub_key: Self::Pub = Self::Pub::unchecked_from(pub_bytes);
-        Ok(pub_key.into())
+        Ok(self._public()?)
     }
 
     fn sign(&self, message: &[u8]) -> Result<MultiSignature> {

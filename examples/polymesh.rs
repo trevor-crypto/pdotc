@@ -1,81 +1,43 @@
-#![allow(unused)]
-use blake2::{Blake2b, Blake2b512, Digest as _};
-use ed25519_dalek::{
-    Digest, Keypair, PublicKey, SecretKey, Sha512, Signature, Signer as SignerTrait,
-};
-use parity_scale_codec::Decode;
 use pdotc::client::{ApiBuilder, ClientError, Result, Signer};
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use pdotc::ss58::Ss58Codec;
-use pdotc::{
-    blake2_256, public_into_account, Ed25519Sig, MultiAddress, Ss58AddressFormat,
-    Ss58AddressFormatRegistry, UncheckedExtrinsic,
-};
-use secp256k1::{Message, Secp256k1};
+use pdotc::{Ed25519Pub, MultiAddress, UncheckedExtrinsic};
 use serde_json::Value;
-use sp_core::crypto::AccountId32;
-use sp_core::hashing::blake2_512;
-use sp_core::sr25519::{self, Pair};
-use sp_core::Pair as TraitPair;
-
-// Polymesh only supports ed25519 and sr25519
-// Polymesh address: 5F6L9ofZJCLYuVYMrXZeywe6pxWUPNqetNwHtvo7jdsu4tYQ
-const SEED_1: &str = "c7f1b0eee936031bdb0266090d0fa333c5ad33df5a83efc20ce9fb348317da7c";
-const MNEMONIC: &str = "pony seed boat doll adapt lion dutch acquire furnace icon help bachelor";
-// Polymesh address: 5Do6aEw8REe7b8aUX2oVZMXnujbcTtduiXQcmGa3Lnya5G8w
-const SEED_2: &str = "0ad6778ab58908050d0dc6be266a70c759c176254e06e5c7052218449371108c";
-// Polymesh address: 5FPDySfrBfGN3XA6thUgWmME4hZ8Q7TyZLMcQzirjNmjKC8y
-const SEED_3: &str = "6d5321f010f3c2ab81508b74eb150f1a9252299690b27b10ef6045a9716ed869";
-// Polymesh address: 5DNSQJirmaiKuRf9gxbQQWx7fWTPRorEDxYkicBcRngGz6Lj
-const SEED_4: &str = "e02abef13d8b05e06c36c42d2b634d57a2c263dd35da81cc9b77cccd9b17b52c";
-// Polymesh address: 5Ftp4PgyEafycLGWmUNasxJbanrF1kkK6FAvRdHo8J5vDSt8
-const MNEMONIC_1: &str = "foam trim elegant fragile wise blade cause have chef ethics medal ramp";
-const SEED_5: &str = "1d8820192af963f513a5f326d14af854c96779c0455324ac5052b9be81863442";
-// Polymesh address: 5HSUdXTJ3xFEkFpiiGoHw36zrSrfTWHiu52qj8WqMotsrLRW
-const SEED_6: &str = "d234cf221ddb00f6944d5d0f97836b2dcddb319e0e3bd88f51a321360215395e";
-const PUB_KEY: &str = "edc80a9c95a0eb72cf9f4f0f1a053e594aad7a96673ca5693ee5a626866b43fb";
+use sp_core::crypto::{AccountId32, Pair, UncheckedFrom};
+use sp_core::Decode;
 
 struct PDotClient<HttpClient> {
     url: String,
     inner: HttpClient,
 }
 
-#[derive(Debug)]
-struct KeyStore {
-    pub key: Keypair,
+struct KeyStore<P: Pair> {
+    pub pair: P,
 }
 
-impl KeyStore {
-    fn new(key: Keypair) -> Self {
-        Self { key }
+impl<P: Pair> KeyStore<P> {
+    fn new(pair: P) -> Self {
+        Self { pair }
     }
 }
 
-impl Default for KeyStore {
-    fn default() -> Self {
-        let secret_seed = hex::decode(SEED_6).unwrap();
-        let secret = SecretKey::from_bytes(&secret_seed).unwrap();
-        let mut pub_seed = hex::decode(PUB_KEY).unwrap();
-        let pub_key = PublicKey::from_bytes(&pub_seed).unwrap();
-        let mut pair_seed = secret_seed;
-        pair_seed.append(&mut pub_seed);
-        let key_pair = Keypair::from_bytes(&pair_seed).unwrap();
-        Self::new(key_pair)
-    }
-}
-
-impl Signer for KeyStore {
+impl<P: Pair> Signer for KeyStore<P>
+where
+    [u8; 32]: From<<P as sp_core::Pair>::Public>,
+    [u8; 64]: From<<P as sp_core::Pair>::Signature>,
+{
     type SigBytes = [u8; 64];
     type PubBytes = [u8; 32];
-    type Signature = Ed25519Sig;
-    type Pub = sp_core::ed25519::Public;
+    type Signature = sp_core::ed25519::Signature;
+    type Pub = Ed25519Pub;
 
     fn _public(
         &self,
-    ) -> std::result::Result<Self::PubBytes, Box<(dyn std::error::Error + Send + Sync + 'static)>>
+    ) -> std::result::Result<AccountId32, Box<(dyn std::error::Error + Send + Sync + 'static)>>
     {
-        let pub_bytes = self.key.public.as_bytes();
-        Ok(*pub_bytes)
+        let pub_bytes: Self::PubBytes = self.pair.public().into();
+        let pub_key: sp_core::ed25519::Public = sp_core::ed25519::Public::unchecked_from(pub_bytes);
+        Ok(pub_key.into())
     }
 
     fn _sign(
@@ -83,11 +45,7 @@ impl Signer for KeyStore {
         message: &[u8],
     ) -> std::result::Result<Self::SigBytes, Box<(dyn std::error::Error + Send + Sync + 'static)>>
     {
-        let mut prehashed = Sha512::new();
-        prehashed.update(message);
-        let signature = self.key.sign_prehashed(prehashed, None)?;
-        assert!(self.key.verify(message, &signature).is_ok());
-        Ok(signature.into())
+        Ok(self.pair.sign(message).into())
     }
 }
 
@@ -108,6 +66,7 @@ impl PDotClient<ureq::Agent> {
         Self {
             inner: ureq::agent(),
             // Testnet API endpoint: https://testnet-rpc.polymesh.live/http
+            // wss://testnet-rpc.polymesh.live
             url: "https://testnet-rpc.polymesh.live/http".to_string(),
         }
     }
@@ -115,22 +74,21 @@ impl PDotClient<ureq::Agent> {
 
 fn main() {
     let client = PDotClient::polyx();
-    let keystore = KeyStore::default();
+    let seed = [
+        185, 125, 217, 137, 121, 53, 179, 62, 100, 212, 10, 65, 202, 11, 43, 117, 21, 225, 24, 72,
+        205, 210, 140, 24, 238, 50, 210, 70, 102, 185, 170, 42,
+    ];
+    let pair = sp_core::ed25519::Pair::from_seed(&seed);
+    let keystore: KeyStore<sp_core::ed25519::Pair> = KeyStore::new(pair);
     let api = ApiBuilder::polymesh(&client)
         .signer(keystore)
         .build()
         .unwrap();
-    println!(
-        "Signer_account: {:?}",
-        api.signer_account()
-            .unwrap()
-            .to_ss58check_with_version(Ss58AddressFormat::custom(42))
-    );
 
     // get balance
     let balance = api
         .account_data(
-            AccountId32::from_ss58check("5HSUdXTJ3xFEkFpiiGoHw36zrSrfTWHiu52qj8WqMotsrLRW")
+            AccountId32::from_ss58check("5Ftp4PgyEafycLGWmUNasxJbanrF1kkK6FAvRdHo8J5vDSt8")
                 .unwrap(),
             None,
         )
@@ -141,7 +99,7 @@ fn main() {
     let xt = api
         .balance_transfer(
             MultiAddress::Id(
-                AccountId32::from_ss58check("5Ftp4PgyEafycLGWmUNasxJbanrF1kkK6FAvRdHo8J5vDSt8")
+                AccountId32::from_ss58check("5Do6aEw8REe7b8aUX2oVZMXnujbcTtduiXQcmGa3Lnya5G8w")
                     .unwrap(),
             ),
             10000,
@@ -152,33 +110,32 @@ fn main() {
     dbg!(&xt_hex);
 
     // get the fee for xt
-    // match api.fee_details(&xt_hex, None) {
-    //     Ok(fees) => {
-    //         dbg!(fees);
-    //     }
-    //     Err(e) => {
-    //         dbg!(e);
-    //     }
-    // }
-
-    // decode xt
-    // assert_eq!(
-    // xt,
-    // UncheckedExtrinsic::decode(
-    //&mut hex::decode(xt_hex.trim_start_matches("0x"))
-    //.unwrap()
-    //.as_slice(),
-    //)
-    //.unwrap()
-    //);
-
-    // send out the transfer xt
-    match client.send_extrinsic(&xt_hex) {
-        Ok(tx_hash) => {
-            dbg!(tx_hash);
+    match api.fee_details(&xt_hex, None) {
+        Ok(fees) => {
+            dbg!(fees);
         }
         Err(e) => {
             dbg!(e);
         }
     }
+
+    // decode xt
+    assert_eq!(
+        xt,
+        UncheckedExtrinsic::decode(
+            &mut hex::decode(xt_hex.trim_start_matches("0x"))
+                .unwrap()
+                .as_slice(),
+        )
+        .unwrap()
+    );
+
+    // send out the transfer xt
+    // match client.send_extrinsic(&xt_hex) {
+    // Ok(tx_hash) => {
+    // dbg!(tx_hash);
+    //}
+    // Err(e) => {
+    // dbg!(e);
+    //}
 }

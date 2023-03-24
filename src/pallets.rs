@@ -55,7 +55,6 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
                 (),
             );
             let raw_payload = SignedPayload::new(call.clone(), extra, s_extra);
-
             let from = signer.public()?.into();
             let sig = raw_payload.encoded(|payload| signer.sign(payload))?;
             Some((from, sig, extra))
