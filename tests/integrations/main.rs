@@ -1,4 +1,4 @@
-#![feature(once_cell)]
+#![feature(lazy_cell)]
 
 use pdotc::blake2_256;
 use pdotc::client::{ClientError, Result, Signer};
