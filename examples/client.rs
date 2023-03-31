@@ -3,12 +3,10 @@ use pdotc::client::*;
 use pdotc::pallets::staking::RewardDestination;
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use pdotc::ss58::Ss58Codec;
-use pdotc::{
-    blake2_256, public_into_account, EcdsaPublic, EcdsaSignature, MultiAddress, UncheckedExtrinsic,
-};
-use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
+use pdotc::{public_into_account, EcdsaPublic, EcdsaSignature, MultiAddress, UncheckedExtrinsic};
 use serde_json::Value;
-use sp_core::crypto::AccountId32;
+use sp_core::crypto::{AccountId32, Pair as _};
+use sp_core::ecdsa::Pair;
 
 // WND address: 5CsanGiE6kBWxdW7qWkxSN6ZnD5hrLCz5nj94qJrqknRn3Jq
 const SEED_1: &str = "9d90b79e257eeb651e0f6759d14c35e5091161f97b079d6a7ca3645067c6ff3f";
@@ -19,14 +17,14 @@ struct PDotClient<HttpClient> {
 }
 
 struct KeyStore {
-    key: SecretKey,
+    pair: Pair,
 }
 
 impl Default for KeyStore {
     fn default() -> Self {
         let seed = hex::decode(SEED_1).unwrap();
-        let key = SecretKey::from_slice(&seed).unwrap();
-        Self { key }
+        let pair = Pair::from_seed_slice(&seed).unwrap();
+        Self { pair }
     }
 }
 
@@ -36,33 +34,13 @@ impl Signer for KeyStore {
     type Signature = EcdsaSignature;
     type Pub = EcdsaPublic;
 
-    fn _public(
-        &self,
-    ) -> std::result::Result<AccountId32, Box<(dyn std::error::Error + Send + Sync + 'static)>>
-    {
-        let secp = Secp256k1::new();
-        let pubkey = PublicKey::from_secret_key(&secp, &self.key);
-        let p = EcdsaPublic(pubkey.serialize());
-        Ok(public_into_account(p))
+    fn _public(&self) -> std::result::Result<AccountId32, StdError> {
+        let pub_key: EcdsaPublic = self.pair.clone().into();
+        Ok(public_into_account(pub_key))
     }
 
-    fn _sign(
-        &self,
-        message: &[u8],
-    ) -> std::result::Result<Self::SigBytes, Box<(dyn std::error::Error + Send + Sync + 'static)>>
-    {
-        let secp = Secp256k1::signing_only();
-        let digest = blake2_256(message);
-
-        let message = Message::from_slice(&digest)?;
-
-        let (rec_id, compact) = secp
-            .sign_ecdsa_recoverable(&message, &self.key)
-            .serialize_compact();
-        let mut sig = [0; 65];
-        sig[0..64].copy_from_slice(&compact);
-        sig[64] = rec_id.to_i32() as u8;
-        Ok(sig)
+    fn _sign(&self, message: &[u8]) -> std::result::Result<Self::SigBytes, StdError> {
+        Ok(self.pair.sign(message).into())
     }
 }
 

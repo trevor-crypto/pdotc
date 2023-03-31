@@ -24,5 +24,4 @@ thiserror = "1"
 
 [dev-dependencies]
 paste = "1"
-secp256k1 = { version = "0.25", features = ["recovery"] }
 ureq = { version = "2.3", features = ["json"] }

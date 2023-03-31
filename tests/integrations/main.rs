@@ -2,9 +2,10 @@
 
 use pdotc::client::{ClientError, Result, Signer, StdError};
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
-use pdotc::{blake2_256, public_into_account, EcdsaPublic, EcdsaSignature};
-use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
+use pdotc::{public_into_account, AccountId32, EcdsaPublic, EcdsaSignature};
 use serde_json::Value;
+use sp_core::crypto::Pair as _;
+use sp_core::ecdsa::Pair;
 
 mod kusama;
 mod polkadot;
@@ -18,42 +19,31 @@ pub struct PDotClient<HttpClient> {
     inner: HttpClient,
 }
 
-pub struct KeyStore {
-    key: SecretKey,
+struct KeyStore {
+    pair: Pair,
 }
 
 impl Default for KeyStore {
     fn default() -> Self {
         let seed = hex::decode(SEED_1).unwrap();
-        let key = SecretKey::from_slice(&seed).unwrap();
-        Self { key }
+        let pair = Pair::from_seed_slice(&seed).unwrap();
+        Self { pair }
     }
 }
 
 impl Signer for KeyStore {
-    type PubBytes = [u8; 33];
     type SigBytes = [u8; 65];
-    type Pub = EcdsaPublic;
+    type PubBytes = [u8; 33];
     type Signature = EcdsaSignature;
+    type Pub = EcdsaPublic;
 
-    fn _public(&self) -> std::result::Result<pdotc::AccountId32, StdError> {
-        let secp = Secp256k1::new();
-        let pubkey = PublicKey::from_secret_key(&secp, &self.key);
-        let p = EcdsaPublic(pubkey.serialize());
-        Ok(public_into_account(p))
+    fn _public(&self) -> std::result::Result<AccountId32, StdError> {
+        let pub_key: EcdsaPublic = self.pair.clone().into();
+        Ok(public_into_account(pub_key))
     }
 
     fn _sign(&self, message: &[u8]) -> std::result::Result<Self::SigBytes, StdError> {
-        let secp = Secp256k1::signing_only();
-        let digest = blake2_256(message);
-        let message = Message::from_slice(&digest)?;
-        let (rec_id, compact) = secp
-            .sign_ecdsa_recoverable(&message, &self.key)
-            .serialize_compact();
-        let mut sig = [0; 65];
-        sig[0..64].copy_from_slice(&compact);
-        sig[64] = rec_id.to_i32() as u8;
-        Ok(sig)
+        Ok(self.pair.sign(message).into())
     }
 }
 
