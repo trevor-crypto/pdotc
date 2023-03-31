@@ -167,13 +167,7 @@ fn main() {
     dbg!(&bond_xt_hex);
 
     // staking unbond
-    let unbond_xt_hex = api
-        .staking_unbond(1000, None)
-        .expect(
-            "Created
-    xt",
-        )
-        .as_hex();
+    let unbond_xt_hex = api.staking_unbond(1000, None).expect("Created xt").as_hex();
     dbg!(&unbond_xt_hex);
 
     // send out the transfer xt
