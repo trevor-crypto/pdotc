@@ -4,7 +4,7 @@ use sp_core::crypto::AccountId32;
 use crate::client::{Api, ClientError, Result, Signer};
 use crate::network::SubstrateNetwork;
 use crate::rpc::RpcClient;
-use crate::{public_into_account, Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
+use crate::{Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
 
 pub mod balances;
 pub mod proxy;
@@ -55,7 +55,6 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
                 (),
             );
             let raw_payload = SignedPayload::new(call.clone(), extra, s_extra);
-
             let from = signer.public()?.into();
             let sig = raw_payload.encoded(|payload| signer.sign(payload))?;
             Some((from, sig, extra))
@@ -68,9 +67,10 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
             function: call,
         })
     }
+
     pub fn signer_account(&self) -> Result<AccountId32> {
         match &self.signer {
-            Some(signer) => Ok(public_into_account(signer.public()?)),
+            Some(signer) => Ok(signer.public()?),
             None => Err(ClientError::NoSigner),
         }
     }

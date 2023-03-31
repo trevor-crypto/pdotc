@@ -1,9 +1,12 @@
 use std::str::FromStr;
 
+use base58::ToBase58;
+use blake2::{Blake2b512, Digest};
 use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
 pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58AddressFormatRegistry};
-pub use sp_core::ecdsa::{Public, Signature};
+pub use sp_core::ecdsa::{Public as EcdsaPublic, Signature as EcdsaSignature};
+pub use sp_core::ed25519::{Public as Ed25519Public, Signature as Ed25519Signature};
 pub use sp_core::{blake2_256, H256};
 
 use crate::pallets::timestamp::decode_timestamp;
@@ -41,8 +44,8 @@ impl From<AccountId32> for GenericAddress {
     }
 }
 
-impl From<Public> for GenericAddress {
-    fn from(p: Public) -> Self {
+impl From<EcdsaPublic> for GenericAddress {
+    fn from(p: EcdsaPublic) -> Self {
         let acct = public_into_account(p);
         MultiAddress::Id(acct)
     }
@@ -58,16 +61,63 @@ impl FromStr for GenericAddress {
     }
 }
 
-pub fn public_into_account(p: Public) -> AccountId32 {
+pub fn public_into_account(p: EcdsaPublic) -> AccountId32 {
     let hash = blake2_256(&p.0);
     hash.into()
 }
 
+pub fn pub_to_account_string(
+    p: [u8; 32],
+    prefix: u16,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let raw_key = p;
+    let mut hasher = Blake2b512::new();
+    hasher.update(b"SS58PRE");
+    let simple_prefix: u8 = (prefix & 0x3F) as _;
+    let full_prefix = 0x4000 | ((prefix >> 8) & 0x3F) | ((prefix & 0xFF) << 6);
+    let prefix_hi: u8 = (full_prefix >> 8) as _;
+    let prefix_low: u8 = (full_prefix & 0xFF) as _;
+    if prefix == simple_prefix as u16 {
+        hasher.update([simple_prefix]);
+    } else {
+        hasher.update([prefix_hi]);
+        hasher.update([prefix_low]);
+    }
+    hasher.update(raw_key);
+    let checksum = hasher.finalize();
+
+    let mut raw_address: Vec<u8> = Vec::with_capacity(64);
+    if prefix == simple_prefix as u16 {
+        raw_address.push(simple_prefix);
+    } else {
+        raw_address.push(prefix_hi);
+        raw_address.push(prefix_low);
+    }
+    raw_address.append(&mut raw_key.to_vec());
+    raw_address.extend_from_slice(&checksum[0..2]);
+    Ok(raw_address[..].to_base58())
+}
+
 #[derive(Clone, Debug, Decode, Encode, PartialEq, Eq)]
 pub enum MultiSignature {
+    /// An Ed25519 signature.
+    #[codec(index = 0)]
+    Ed25519(Ed25519Signature),
     /// An ECDSA/SECP256k1 signature.
     #[codec(index = 2)]
-    Ecdsa(Signature),
+    Ecdsa(EcdsaSignature),
+}
+
+impl From<EcdsaSignature> for MultiSignature {
+    fn from(value: EcdsaSignature) -> Self {
+        MultiSignature::Ecdsa(value)
+    }
+}
+
+impl From<Ed25519Signature> for MultiSignature {
+    fn from(value: Ed25519Signature) -> Self {
+        MultiSignature::Ed25519(value)
+    }
 }
 
 /// runtime spec verion, transaction version, genesis hash, genesis hash or

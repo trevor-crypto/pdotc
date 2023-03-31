@@ -3,7 +3,9 @@ use pdotc::client::*;
 use pdotc::pallets::staking::RewardDestination;
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use pdotc::ss58::Ss58Codec;
-use pdotc::{blake2_256, MultiAddress, UncheckedExtrinsic};
+use pdotc::{
+    blake2_256, public_into_account, EcdsaPublic, EcdsaSignature, MultiAddress, UncheckedExtrinsic,
+};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
 use serde_json::Value;
 use sp_core::crypto::AccountId32;
@@ -29,18 +31,26 @@ impl Default for KeyStore {
 }
 
 impl Signer for KeyStore {
+    type SigBytes = [u8; 65];
+    type PubBytes = [u8; 33];
+    type Signature = EcdsaSignature;
+    type Pub = EcdsaPublic;
+
     fn _public(
         &self,
-    ) -> std::result::Result<[u8; 33], Box<(dyn std::error::Error + Send + Sync + 'static)>> {
+    ) -> std::result::Result<AccountId32, Box<(dyn std::error::Error + Send + Sync + 'static)>>
+    {
         let secp = Secp256k1::new();
         let pubkey = PublicKey::from_secret_key(&secp, &self.key);
-        Ok(pubkey.serialize())
+        let p = EcdsaPublic(pubkey.serialize());
+        Ok(public_into_account(p))
     }
 
     fn _sign(
         &self,
         message: &[u8],
-    ) -> std::result::Result<[u8; 65], Box<(dyn std::error::Error + Send + Sync + 'static)>> {
+    ) -> std::result::Result<Self::SigBytes, Box<(dyn std::error::Error + Send + Sync + 'static)>>
+    {
         let secp = Secp256k1::signing_only();
         let digest = blake2_256(message);
 

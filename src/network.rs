@@ -39,6 +39,8 @@ pub struct Polkadot;
 pub struct Westend;
 #[derive(Debug, Copy, Clone)]
 pub struct Kusama;
+#[derive(Debug, Copy, Clone)]
+pub struct Polymesh;
 
 impl SubstrateNetwork for Polkadot {
     const NAME: &'static str = "polkadot";
@@ -63,6 +65,15 @@ impl SubstrateNetwork for Kusama {
     const BALANCE_PALLET_IDX: u8 = 4;
     const STAKING_PALLET_IDX: u8 = 6;
     const PROXY_PALLET_IDX: u8 = 30;
+    type ProxyDelegateType = GenericAddress;
+    type ProxyTypeType = ProxyType;
+}
+
+impl SubstrateNetwork for Polymesh {
+    const NAME: &'static str = "polymesh";
+    const BALANCE_PALLET_IDX: u8 = 5;
+    const STAKING_PALLET_IDX: u8 = 10;
+    const PROXY_PALLET_IDX: u8 = 0;
     type ProxyDelegateType = GenericAddress;
     type ProxyTypeType = ProxyType;
 }

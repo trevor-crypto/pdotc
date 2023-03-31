@@ -1,10 +1,10 @@
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
-use sp_core::crypto::AccountId32;
-use sp_core::ecdsa::Public;
+use sp_core::crypto::{AccountId32, UncheckedFrom};
 pub use sp_core::ecdsa::Signature;
 
-use crate::network::{Kusama, Polkadot, SubstrateNetwork, Westend};
+use crate::network::{Kusama, Polkadot, Polymesh, SubstrateNetwork, Westend};
 use crate::pallets::storage::storage_key_account_balance;
 use crate::rpc::{
     chain_get_block, chain_get_block_hash, chain_get_genesis_hash, payment_query_fee_details,
@@ -17,7 +17,7 @@ use crate::{
 
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 
-type StdError = Box<dyn std::error::Error + Send + Sync>;
+pub type StdError = Box<dyn std::error::Error + Send + Sync>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ClientError {
@@ -39,22 +39,31 @@ pub enum ClientError {
     SignerAccountDoesNotExist,
     #[error(transparent)]
     Other(#[from] StdError),
+    #[error("Invalid signature size")]
+    InvalidSignatureSize,
 }
 
-/// A trait to implement on a keystore that can produce an ECDSA signature
+/// A trait to implement on a keystore that can produce a signature
 pub trait Signer {
-    /// Returns a 33 byte ECDSA public key
-    fn _public(&self) -> std::result::Result<[u8; 33], StdError>;
+    type PubBytes: Debug;
+    type SigBytes: Debug;
+    type Pub: UncheckedFrom<Self::PubBytes>;
+    type Signature: Into<MultiSignature> + UncheckedFrom<Self::SigBytes>;
 
-    /// Returns a 65 byte compressed ECDSA signature
-    fn _sign(&self, message: &[u8]) -> std::result::Result<[u8; 65], StdError>;
+    /// Returns a public key
+    fn _public(&self) -> std::result::Result<AccountId32, StdError>;
 
-    fn public(&self) -> Result<Public> {
-        Ok(Public(self._public()?))
+    /// Returns a N byte compressed ECDSA signature
+    fn _sign(&self, message: &[u8]) -> std::result::Result<Self::SigBytes, StdError>;
+
+    fn public(&self) -> Result<AccountId32> {
+        Ok(self._public()?)
     }
 
     fn sign(&self, message: &[u8]) -> Result<MultiSignature> {
-        Ok(MultiSignature::Ecdsa(Signature(self._sign(message)?)))
+        let sig_bytes = self._sign(message).unwrap();
+        let sig: Self::Signature = Self::Signature::unchecked_from(sig_bytes);
+        Ok(sig.into())
     }
 }
 
@@ -76,6 +85,13 @@ impl<'c> ApiBuilder {
     }
 
     pub fn kusama<C: RpcClient>(client: &'c C) -> ApiBuilderWithClient<'c, C, Kusama> {
+        ApiBuilderWithClient {
+            client,
+            network: PhantomData,
+        }
+    }
+
+    pub fn polymesh<C: RpcClient>(client: &'c C) -> ApiBuilderWithClient<'c, C, Polymesh> {
         ApiBuilderWithClient {
             client,
             network: PhantomData,
@@ -148,7 +164,7 @@ fn runtime_version<C: RpcClient>(client: &C) -> Result<RuntimeVersion> {
 pub struct Api<'c, S, C: RpcClient, Network: SubstrateNetwork> {
     pub(crate) genesis_hash: H256,
     pub(crate) runtime_version: RuntimeVersion,
-    pub(crate) signer: Option<S>,
+    pub signer: Option<S>,
     pub(crate) client: &'c C,
     network: PhantomData<Network>,
 }

@@ -1,8 +1,8 @@
 #![feature(lazy_cell)]
 
-use pdotc::blake2_256;
-use pdotc::client::{ClientError, Result, Signer};
+use pdotc::client::{ClientError, Result, Signer, StdError};
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
+use pdotc::{blake2_256, public_into_account, EcdsaPublic, EcdsaSignature};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
 use serde_json::Value;
 
@@ -31,23 +31,22 @@ impl Default for KeyStore {
 }
 
 impl Signer for KeyStore {
-    fn _public(
-        &self,
-    ) -> std::result::Result<[u8; 33], Box<(dyn std::error::Error + Send + Sync + 'static)>> {
+    type PubBytes = [u8; 33];
+    type SigBytes = [u8; 65];
+    type Pub = EcdsaPublic;
+    type Signature = EcdsaSignature;
+
+    fn _public(&self) -> std::result::Result<pdotc::AccountId32, StdError> {
         let secp = Secp256k1::new();
         let pubkey = PublicKey::from_secret_key(&secp, &self.key);
-        Ok(pubkey.serialize())
+        let p = EcdsaPublic(pubkey.serialize());
+        Ok(public_into_account(p))
     }
 
-    fn _sign(
-        &self,
-        message: &[u8],
-    ) -> std::result::Result<[u8; 65], Box<(dyn std::error::Error + Send + Sync + 'static)>> {
+    fn _sign(&self, message: &[u8]) -> std::result::Result<Self::SigBytes, StdError> {
         let secp = Secp256k1::signing_only();
         let digest = blake2_256(message);
-
         let message = Message::from_slice(&digest)?;
-
         let (rec_id, compact) = secp
             .sign_ecdsa_recoverable(&message, &self.key)
             .serialize_compact();
