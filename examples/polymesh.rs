@@ -1,7 +1,7 @@
 use pdotc::client::{ApiBuilder, ClientError, Result, Signer};
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use pdotc::ss58::Ss58Codec;
-use pdotc::{Ed25519Pub, MultiAddress, UncheckedExtrinsic};
+use pdotc::{Ed25519Public, MultiAddress, UncheckedExtrinsic};
 use serde_json::Value;
 use sp_core::crypto::{AccountId32, Pair, UncheckedFrom};
 use sp_core::Decode;
@@ -29,7 +29,7 @@ where
     type SigBytes = [u8; 64];
     type PubBytes = [u8; 32];
     type Signature = sp_core::ed25519::Signature;
-    type Pub = Ed25519Pub;
+    type Pub = Ed25519Public;
 
     fn _public(
         &self,

@@ -5,8 +5,8 @@ use blake2::{Blake2b512, Digest};
 use parity_scale_codec::{Compact, Decode, Encode, Error, Input};
 use serde::{Deserialize, Serialize};
 pub use sp_core::crypto::{AccountId32, Ss58AddressFormat, Ss58AddressFormatRegistry};
-pub use sp_core::ecdsa::{Public, Signature};
-pub use sp_core::ed25519::{Public as Ed25519Pub, Signature as Ed25519Sig};
+pub use sp_core::ecdsa::{Public as EcdsaPublic, Signature as EcdsaSignature};
+pub use sp_core::ed25519::{Public as Ed25519Public, Signature as Ed25519Signature};
 pub use sp_core::{blake2_256, H256};
 
 use crate::pallets::timestamp::decode_timestamp;
@@ -44,8 +44,8 @@ impl From<AccountId32> for GenericAddress {
     }
 }
 
-impl From<Public> for GenericAddress {
-    fn from(p: Public) -> Self {
+impl From<EcdsaPublic> for GenericAddress {
+    fn from(p: EcdsaPublic) -> Self {
         let acct = public_into_account(p);
         MultiAddress::Id(acct)
     }
@@ -61,7 +61,7 @@ impl FromStr for GenericAddress {
     }
 }
 
-pub fn public_into_account(p: Public) -> AccountId32 {
+pub fn public_into_account(p: EcdsaPublic) -> AccountId32 {
     let hash = blake2_256(&p.0);
     hash.into()
 }
@@ -102,20 +102,20 @@ pub fn pub_to_account_string(
 pub enum MultiSignature {
     /// An Ed25519 signature.
     #[codec(index = 0)]
-    Ed25519(Ed25519Sig),
+    Ed25519(Ed25519Signature),
     /// An ECDSA/SECP256k1 signature.
     #[codec(index = 2)]
-    Ecdsa(Signature),
+    Ecdsa(EcdsaSignature),
 }
 
-impl From<Signature> for MultiSignature {
-    fn from(value: Signature) -> Self {
+impl From<EcdsaSignature> for MultiSignature {
+    fn from(value: EcdsaSignature) -> Self {
         MultiSignature::Ecdsa(value)
     }
 }
 
-impl From<Ed25519Sig> for MultiSignature {
-    fn from(value: Ed25519Sig) -> Self {
+impl From<Ed25519Signature> for MultiSignature {
+    fn from(value: Ed25519Signature) -> Self {
         MultiSignature::Ed25519(value)
     }
 }

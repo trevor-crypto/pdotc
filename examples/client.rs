@@ -3,7 +3,9 @@ use pdotc::client::*;
 use pdotc::pallets::staking::RewardDestination;
 use pdotc::rpc::{JsonRpcResponse, RpcClient};
 use pdotc::ss58::Ss58Codec;
-use pdotc::{blake2_256, public_into_account, MultiAddress, Public, UncheckedExtrinsic};
+use pdotc::{
+    blake2_256, public_into_account, EcdsaPublic, EcdsaSignature, MultiAddress, UncheckedExtrinsic,
+};
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
 use serde_json::Value;
 use sp_core::crypto::AccountId32;
@@ -31,8 +33,8 @@ impl Default for KeyStore {
 impl Signer for KeyStore {
     type SigBytes = [u8; 65];
     type PubBytes = [u8; 33];
-    type Signature = Signature;
-    type Pub = Public;
+    type Signature = EcdsaSignature;
+    type Pub = EcdsaPublic;
 
     fn _public(
         &self,
@@ -40,7 +42,7 @@ impl Signer for KeyStore {
     {
         let secp = Secp256k1::new();
         let pubkey = PublicKey::from_secret_key(&secp, &self.key);
-        let p = Public(pubkey.serialize());
+        let p = EcdsaPublic(pubkey.serialize());
         Ok(public_into_account(p))
     }
 

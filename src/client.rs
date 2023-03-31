@@ -17,7 +17,7 @@ use crate::{
 
 pub type Result<R, E = ClientError> = std::result::Result<R, E>;
 
-type StdError = Box<dyn std::error::Error + Send + Sync>;
+pub type StdError = Box<dyn std::error::Error + Send + Sync>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ClientError {
