@@ -72,7 +72,7 @@ impl SubstrateNetwork for Kusama {
 impl SubstrateNetwork for Polymesh {
     const NAME: &'static str = "polymesh";
     const BALANCE_PALLET_IDX: u8 = 5;
-    const STAKING_PALLET_IDX: u8 = 17;
+    const STAKING_PALLET_IDX: u8 = 10;
     const PROXY_PALLET_IDX: u8 = 0;
     type ProxyDelegateType = GenericAddress;
     type ProxyTypeType = ProxyType;

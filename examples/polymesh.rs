@@ -65,9 +65,7 @@ impl PDotClient<ureq::Agent> {
     fn polyx() -> Self {
         Self {
             inner: ureq::agent(),
-            // Testnet API endpoint: https://testnet-rpc.polymesh.live/http
-            // wss://testnet-rpc.polymesh.live
-            url: "https://testnet-rpc.polymesh.live/http".to_string(),
+            url: "http://testnet-rpc.polymesh.live/http".to_string(),
         }
     }
 }
@@ -80,30 +78,26 @@ fn main() {
     ];
     let pair = sp_core::ed25519::Pair::from_seed(&seed);
     let keystore: KeyStore<sp_core::ed25519::Pair> = KeyStore::new(pair);
+    let primary_key = keystore.pair.public();
     let api = ApiBuilder::polymesh(&client)
         .signer(keystore)
         .build()
         .unwrap();
+    let account: AccountId32 = primary_key.into();
 
     // get balance
-    let balance = api
-        .account_data(
-            AccountId32::from_ss58check("5Ftp4PgyEafycLGWmUNasxJbanrF1kkK6FAvRdHo8J5vDSt8")
-                .unwrap(),
-            None,
-        )
-        .unwrap();
+    let balance = api.account_data(account, None).unwrap();
     dbg!(balance);
 
     // sign a tx
     let xt = api
         .balance_transfer(
             MultiAddress::Id(
-                AccountId32::from_ss58check("5Do6aEw8REe7b8aUX2oVZMXnujbcTtduiXQcmGa3Lnya5G8w")
+                AccountId32::from_ss58check("5GHJEvkT9HngLP8kcaDyJ9o57xRzpvv5cvEoQkaBrZKQfBSx")
                     .unwrap(),
             ),
             10000,
-            None,
+            Some(0),
         )
         .expect("Created xt");
     let xt_hex = xt.as_hex();
