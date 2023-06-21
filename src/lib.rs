@@ -277,12 +277,35 @@ pub struct AccountDataGen<Balance> {
     /// to set aside tokens that are still 'owned' by the account holder,
     /// but which are suspendable.
     pub reserved: Balance,
-    /// The amount that `free` may not drop below when withdrawing for *anything
-    /// except transaction fee payment*.
-    pub misc_frozen: Balance,
-    /// The amount that `free` may not drop below when withdrawing specifically
-    /// for transaction fee payment.
-    pub fee_frozen: Balance,
+    /// The amount that `free` may not drop below when reducing the balance,
+    /// except for actions where the account owner cannot reasonably benefit
+    /// from thr balance reduction, such as slashing.
+    pub frozen: Balance,
+    /// Extra information about this account. The MSB is a flag indicating
+    /// whether the new ref- counting logic is in place for this account.
+    pub flags: ExtraFlags,
+}
+
+const IS_NEW_LOGIC: u128 = 0x80000000_00000000_00000000_00000000u128;
+
+#[derive(Clone, Eq, PartialEq, Debug, Encode, Decode, Deserialize)]
+pub struct ExtraFlags(u128);
+
+impl Default for ExtraFlags {
+    fn default() -> Self {
+        Self(IS_NEW_LOGIC)
+    }
+}
+impl ExtraFlags {
+    pub fn old_logic() -> Self {
+        Self(0)
+    }
+    pub fn set_new_logic(&mut self) {
+        self.0 |= IS_NEW_LOGIC
+    }
+    pub fn is_new_logic(&self) -> bool {
+        (self.0 & IS_NEW_LOGIC) == IS_NEW_LOGIC
+    }
 }
 
 /// Type used to encode the number of references an account has.
