@@ -21,7 +21,6 @@ pub trait SubstrateNetwork: Clone + Copy + 'static {
     const STAKING_WITHDRAW_UNBONDED: u8 = 3;
     const STAKING_NOMINATE: u8 = 5;
     const STAKING_CHILL: u8 = 6;
-    const STAKING_SET_CONTROLLER: u8 = 8;
     const STAKING_REBOND: u8 = 19;
 
     // Proxy Pallet

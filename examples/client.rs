@@ -128,18 +128,7 @@ fn main() {
 
     // staking bond
     let bond_xt_hex = api
-        .staking_bond(
-            MultiAddress::Id(
-                AccountId32::from_ss58check_with_version(
-                    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
-                )
-                .unwrap()
-                .0,
-            ),
-            1000,
-            RewardDestination::Stash,
-            None,
-        )
+        .staking_bond(1000, RewardDestination::Stash, None)
         .expect("Created xt")
         .as_hex();
     dbg!(&bond_xt_hex);
@@ -183,18 +172,7 @@ fn main() {
     dbg!(fees);
 
     let bond_xt_hex = api
-        .staking_bond(
-            MultiAddress::Id(
-                AccountId32::from_ss58check_with_version(
-                    "5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe",
-                )
-                .unwrap()
-                .0,
-            ),
-            1000,
-            RewardDestination::Stash,
-            None,
-        )
+        .staking_bond(1000, RewardDestination::Stash, None)
         .expect("Created xt")
         .as_hex();
     dbg!(&bond_xt_hex);

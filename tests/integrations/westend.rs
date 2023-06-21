@@ -27,17 +27,10 @@ validate_xt!(
     balance_transfer("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"),
     "0x040000ff0011afc404c2f8c72ec8bcdeb64d6367822bf3a205a9ac4c1b17ffa75c3f0fa10f"
 );
-validate_xt!(
-    staking_bond("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"),
-    "0x060000ff0011afc404c2f8c72ec8bcdeb64d6367822bf3a205a9ac4c1b17ffa75c3f0fa10f01"
-);
+validate_xt!(staking_bond(), "0x0600a10f01");
 validate_xt!(
     staking_nominate("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"),
     "0x06050400ff0011afc404c2f8c72ec8bcdeb64d6367822bf3a205a9ac4c1b17ffa75c3f0f"
-);
-validate_xt!(
-    staking_set_controller("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"),
-    "0x060800ff0011afc404c2f8c72ec8bcdeb64d6367822bf3a205a9ac4c1b17ffa75c3f0f"
 );
 validate_xt!(
     proxy_add_proxy("5Hq465EqSK865f4cHMgDpuKZf45ukuUshFxAPCCzmJEoBoNe"),

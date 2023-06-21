@@ -108,6 +108,7 @@ macro_rules! validate_xt {
             #[test]
             fn  [<test_ $call _fee>]() {
                 let xt = $crate::xt::$call(&API, $($args)*).as_hex();
+                dbg!(&xt);
                 let res = API.fee_details(&xt, None);
                 dbg!(&res);
                 assert!(res.is_ok());

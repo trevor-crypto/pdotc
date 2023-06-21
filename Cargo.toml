@@ -14,26 +14,27 @@ edition = "2021"
 base58 = "0.2"
 blake2 = "0.10"
 hex = "0.4"
-parity-scale-codec = { version = "3.2", default-features = false, features = [
-    "derive",
-] }
-
-sp-core = { default-features = false, features = [
-    "full_crypto",
-    "serde",
-], git = "https://github.com/paritytech/substrate.git", rev = "713e34a" }
-sp-storage = { default-features = false, features = [
-    "serde",
-], git = "https://github.com/paritytech/substrate.git", rev = "713e34a" }
-
-primitive-types = { version = "0.12", default-features = false, features = [
-    "codec",
-    "scale-info",
-    "serde",
-] }
+primitive-types = { version = "0.12", default-features = false, features = ["codec","scale-info","serde"] }
 serde = "1"
 serde_json = "1"
 thiserror = "1"
+
+[dependencies.parity-scale-codec]
+version = "3.2"
+default-features = false
+features = ["derive"]
+
+[dependencies.sp-core]
+default-features = false
+features = ["full_crypto", "serde"]
+git = "https://github.com/paritytech/substrate.git"
+rev = "713e34a"
+
+[dependencies.sp-storage]
+default-features = false
+features = ["serde"]
+git = "https://github.com/paritytech/substrate.git"
+rev = "713e34a"
 
 [dev-dependencies]
 paste = "1"
