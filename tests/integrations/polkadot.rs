@@ -3,9 +3,11 @@ use std::sync::{LazyLock, OnceLock};
 use paste::paste;
 use pdotc::client::{Api, ApiBuilder};
 use pdotc::network::Polkadot;
+use pdotc::ss58::Ss58Codec;
+use pdotc::AccountId32;
 use ureq::Agent;
 
-use crate::{validate_xt, KeyStore, PDotClient};
+use crate::{get_balance, validate_xt, KeyStore, PDotClient};
 
 static CLIENT: OnceLock<PDotClient<Agent>> = OnceLock::new();
 
@@ -13,6 +15,8 @@ static API: LazyLock<Api<KeyStore, PDotClient<Agent>, Polkadot>> = LazyLock::new
     let client = CLIENT.get_or_init(PDotClient::dot);
     ApiBuilder::polkadot(client).build().unwrap()
 });
+
+get_balance!("15FEzAVAanaAGtVZLEDMeRKdKipwQrTCpJd1k6k4WP4LhXgT");
 
 validate_xt!(staking_rebond(), "0x0713a10f");
 validate_xt!(staking_bond_extra(), "0x0701a10f");

@@ -115,3 +115,19 @@ macro_rules! validate_xt {
          }
     };
 }
+
+#[macro_export]
+macro_rules! get_balance {
+    ($addr:literal) => {
+        #[test]
+        fn get_balance() {
+            let info = API
+                .account_data(
+                    AccountId32::from_ss58check_with_version($addr).unwrap().0,
+                    None,
+                )
+                .unwrap();
+            dbg!(info);
+        }
+    };
+}
