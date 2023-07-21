@@ -6,8 +6,8 @@ use pdotc::network::SubstrateNetwork;
 use pdotc::pallets::balances::ComposedTransfer;
 use pdotc::pallets::staking::{
     ComposedStakingBond, ComposedStakingBondExtra, ComposedStakingChill, ComposedStakingNominate,
-    ComposedStakingRebond, ComposedStakingSetController, ComposedStakingUnbond,
-    ComposedStakingWithdrawUnbonded, RewardDestination,
+    ComposedStakingRebond, ComposedStakingUnbond, ComposedStakingWithdrawUnbonded,
+    RewardDestination,
 };
 use pdotc::rpc::RpcClient;
 use pdotc::ss58::Ss58Codec;
@@ -27,15 +27,9 @@ pub fn balance_transfer<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
 
 pub fn staking_bond<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
-    addr: &str,
 ) -> UncheckedExtrinsic<ComposedStakingBond> {
-    api.staking_bond(
-        MultiAddress::Id(AccountId32::from_ss58check_with_version(addr).unwrap().0),
-        1000,
-        RewardDestination::Stash,
-        None,
-    )
-    .unwrap()
+    api.staking_bond(1000, RewardDestination::Stash, None)
+        .unwrap()
 }
 pub fn staking_bond_extra<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
@@ -72,17 +66,6 @@ pub fn staking_chill<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
     api: &Api<S, Client, N>,
 ) -> UncheckedExtrinsic<ComposedStakingChill> {
     api.staking_chill(None).unwrap()
-}
-
-pub fn staking_set_controller<S: Signer, Client: RpcClient, N: SubstrateNetwork>(
-    api: &Api<S, Client, N>,
-    addr: &str,
-) -> UncheckedExtrinsic<ComposedStakingSetController> {
-    api.staking_set_controller(
-        MultiAddress::Id(AccountId32::from_ss58check_with_version(addr).unwrap().0),
-        None,
-    )
-    .unwrap()
 }
 
 pub fn staking_rebond<S: Signer, Client: RpcClient, N: SubstrateNetwork>(

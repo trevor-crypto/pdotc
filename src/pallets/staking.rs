@@ -8,7 +8,6 @@ use crate::{Balance, GenericAddress, UncheckedExtrinsic};
 
 pub type ComposedStakingBond = (
     CallIndex,
-    GenericAddress,
     Compact<Balance>,
     RewardDestination<GenericAddress>,
 );
@@ -17,7 +16,6 @@ pub type ComposedStakingUnbond = (CallIndex, Compact<Balance>);
 pub type ComposedStakingWithdrawUnbonded = (CallIndex, u32);
 pub type ComposedStakingNominate = (CallIndex, Vec<GenericAddress>);
 pub type ComposedStakingChill = CallIndex;
-pub type ComposedStakingSetController = (CallIndex, GenericAddress);
 pub type ComposedStakingRebond = (CallIndex, Compact<Balance>);
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Encode, Decode)]
@@ -32,14 +30,12 @@ pub enum RewardDestination<Account> {
 impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
     pub fn staking_bond(
         &self,
-        controller: GenericAddress,
         amount: Balance,
         payee: RewardDestination<GenericAddress>,
         nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingBond>> {
         let call = (
             [N::STAKING_PALLET_IDX, N::STAKING_BOND],
-            controller,
             Compact(amount),
             payee,
         );
@@ -93,18 +89,6 @@ impl<S: Signer, Client: RpcClient, N: SubstrateNetwork> Api<'_, S, Client, N> {
         nonce: Option<u32>,
     ) -> Result<UncheckedExtrinsic<ComposedStakingChill>> {
         self._create_xt([N::STAKING_PALLET_IDX, N::STAKING_CHILL], nonce)
-    }
-
-    pub fn staking_set_controller(
-        &self,
-        controller: GenericAddress,
-        nonce: Option<u32>,
-    ) -> Result<UncheckedExtrinsic<ComposedStakingSetController>> {
-        let call = (
-            [N::STAKING_PALLET_IDX, N::STAKING_SET_CONTROLLER],
-            controller,
-        );
-        self._create_xt(call, nonce)
     }
 
     pub fn staking_rebond(
