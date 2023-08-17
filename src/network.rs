@@ -30,6 +30,10 @@ pub trait SubstrateNetwork: Clone + Copy + 'static {
     const PROXY_REMOVE_PROXIES: u8 = 3;
     type ProxyDelegateType: Encode + Decode + Clone + FromStr<Err = &'static str>;
     type ProxyTypeType: Encode + Decode + Clone + FromStr<Err = &'static str>;
+
+    // Identity Pallet
+    const IDENTITY_PALLET_IDX: u8 = 7;
+    const IDENTITY_JOIN_AS_KEY: u8 = 5;
 }
 
 #[derive(Debug, Copy, Clone)]

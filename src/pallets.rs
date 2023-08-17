@@ -7,6 +7,7 @@ use crate::rpc::RpcClient;
 use crate::{Era, GenericExtra, SignedPayload, UncheckedExtrinsic};
 
 pub mod balances;
+pub mod identity;
 pub mod proxy;
 pub mod staking;
 pub mod storage;
